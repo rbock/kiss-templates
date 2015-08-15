@@ -33,5 +33,6 @@ add_custom_target(functions_templates DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/functi
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../include)
 add_executable(functions test.cpp ${CMAKE_CURRENT_BINARY_DIR}/functions.h)
 add_dependencies(functions functions_templates)
+target_link_libraries(functions PRIVATE kiste)
 
 

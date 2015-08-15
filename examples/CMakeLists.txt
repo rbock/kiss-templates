@@ -25,4 +25,5 @@
 add_subdirectory(0_hello_world)
 add_subdirectory(1_functions)
 add_subdirectory(2_cpp)
+add_subdirectory(3_inheritance)
 

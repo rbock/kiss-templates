@@ -33,5 +33,6 @@ add_custom_target(cpp_templates DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sample.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../include)
 add_executable(cpp test.cpp ${CMAKE_CURRENT_BINARY_DIR}/sample.h)
 add_dependencies(cpp cpp_templates)
+target_link_libraries(cpp PRIVATE kiste)
 
 

@@ -1,11 +1,11 @@
 %namespace test
 %{
-	$class Hello
+  $class Hello
 
-	%auto render() const -> void
-	%{
-		Hello ${data}!
-	%}
+  %auto render() const -> void
+  %{
+    Hello ${data}!
+  %}
 
-	$endclass
+  $endclass
 %}
