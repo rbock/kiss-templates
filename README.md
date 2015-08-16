@@ -28,7 +28,7 @@ Template are a mix of
 I bet you can guess what this all means (and it is documented below), so let's compile this into a C++ header file:
 
 ```
-kiste2cpp hello_world.kt > hello_world.h
+kiste2cpp hello_world.kiste > hello_world.h
 ```
 
 ### Using the generated code:
