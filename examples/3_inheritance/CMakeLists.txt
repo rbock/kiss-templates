@@ -41,7 +41,7 @@ function(add_kiss_templates KISTE_NAME)
 	add_custom_target(${KISTE_NAME} DEPENDS ${templates})
 endfunction()
 
-add_kiss_templates(inheritance_templates parent.kt child.kt grand_child.kt)
+add_kiss_templates(inheritance_templates parent.kiste child.kiste grand_child.kiste)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../include)
 add_executable(inheritance test.cpp)

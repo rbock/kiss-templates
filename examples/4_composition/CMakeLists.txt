@@ -41,7 +41,7 @@ function(add_kiss_templates KISTE_NAME)
 	add_custom_target(${KISTE_NAME} DEPENDS ${templates})
 endfunction()
 
-add_kiss_templates(composition_templates sample.kt helper.kt)
+add_kiss_templates(composition_templates sample.kiste helper.kiste)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../include)
 add_executable(composition test.cpp)

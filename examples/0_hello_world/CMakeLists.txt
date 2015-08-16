@@ -24,8 +24,8 @@
 
 add_custom_command(
 	OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/hello_world.h
-	COMMAND ${CMAKE_BINARY_DIR}/src/kiste2cpp ${CMAKE_CURRENT_LIST_DIR}/hello_world.kt > ${CMAKE_CURRENT_BINARY_DIR}/hello_world.h
-	DEPENDS ${CMAKE_CURRENT_LIST_DIR}/hello_world.kt kiste2cpp
+	COMMAND ${CMAKE_BINARY_DIR}/src/kiste2cpp ${CMAKE_CURRENT_LIST_DIR}/hello_world.kiste > ${CMAKE_CURRENT_BINARY_DIR}/hello_world.h
+	DEPENDS ${CMAKE_CURRENT_LIST_DIR}/hello_world.kiste kiste2cpp
 	)
 
 add_custom_target(hello_world_templates DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/hello_world.h)

@@ -24,8 +24,8 @@
 
 add_custom_command(
 	OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/functions.h
-	COMMAND ${CMAKE_BINARY_DIR}/src/kiste2cpp ${CMAKE_CURRENT_LIST_DIR}/functions.kt > ${CMAKE_CURRENT_BINARY_DIR}/functions.h
-	DEPENDS ${CMAKE_CURRENT_LIST_DIR}/functions.kt kiste2cpp
+	COMMAND ${CMAKE_BINARY_DIR}/src/kiste2cpp ${CMAKE_CURRENT_LIST_DIR}/functions.kiste > ${CMAKE_CURRENT_BINARY_DIR}/functions.h
+	DEPENDS ${CMAKE_CURRENT_LIST_DIR}/functions.kiste kiste2cpp
 	)
 
 add_custom_target(functions_templates DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/functions.h)

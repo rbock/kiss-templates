@@ -24,8 +24,8 @@
 
 add_custom_command(
 	OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sample.h
-	COMMAND ${CMAKE_BINARY_DIR}/src/kiste2cpp ${CMAKE_CURRENT_LIST_DIR}/sample.kt > ${CMAKE_CURRENT_BINARY_DIR}/sample.h
-	DEPENDS ${CMAKE_CURRENT_LIST_DIR}/sample.kt kiste2cpp
+	COMMAND ${CMAKE_BINARY_DIR}/src/kiste2cpp ${CMAKE_CURRENT_LIST_DIR}/sample.kiste > ${CMAKE_CURRENT_BINARY_DIR}/sample.h
+	DEPENDS ${CMAKE_CURRENT_LIST_DIR}/sample.kiste kiste2cpp
 	)
 
 add_custom_target(cpp_templates DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sample.h)
