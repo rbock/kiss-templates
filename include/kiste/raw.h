@@ -5,11 +5,6 @@
 
 namespace kiste
 {
-  struct terminal_t
-  {
-  };
-  constexpr auto terminal = terminal_t{};
-
   struct raw
   {
     std::ostream& _os;

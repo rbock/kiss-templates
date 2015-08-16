@@ -1,6 +1,6 @@
 #include <iostream>
 #include <sample.h>
-#include <vector>
+#include <kiste/raw.h>
 
 struct Data
 {

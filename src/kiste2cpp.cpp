@@ -226,7 +226,7 @@ namespace
   void write_header(parse_context& ctx)
   {
     ctx.os << "#pragma once\n";
-    ctx.os << "#include <kiste.h>\n";
+    ctx.os << "#include <kiste/terminal.h>\n";
     ctx.os << "\n";
   }
 
