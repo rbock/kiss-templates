@@ -1,8 +1,8 @@
 # kiss-templates
-Type safe _"Keep it simple, stupid"_ text templates for C++
+Type safe _"Keep it simple, stupid"_ text templates for C++. If you are familiar with the idea of text templates and with C++, you can learn how to use it in just a few minutes.
 
 ## How it works:
-Use kiste2cpp to turn text templates into type- and name-safe C++ code that generates text from your data.
+Use kiste2cpp to turn text templates into type- and name-safe C++ code. Use this code to generate text from your data and the serializer of choice.
 
 ### How templates look like:
 Template are a mix of
@@ -62,6 +62,17 @@ $ ./examples/0_hello_world/hello_world
     Hello World!
 ```
 Yeah!
+
+## Short Reference:
+  - `%<whatever>` C++ code
+  - `$class <name>` starts a template class
+  - `$class <name> : <base>` starts a template class, which inherits from a base class
+  - `$endclass` ends a template class
+  - `${<expression>}` send expression to serializer
+  - `$call{<function>}` call a function (do not serialize result)
+  - `$|` trim left/right
+  - `$$` and `$%` escape `$` and `%` respectively
+  - Anything else inside a function of a template class is text
 
 ## The kiss template syntax
 
