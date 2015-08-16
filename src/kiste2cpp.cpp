@@ -250,6 +250,29 @@ namespace
     };
   }
 
+  void parse_member(parse_context& ctx, const std::string& line)
+  {
+    if (ctx.class_name.empty())
+      throw parse_error(ctx, "Cannot add a member here, did you forget to call $class?");
+    const auto classBegin = line.find_first_not_of(" \t", std::strlen("member"));
+    if (classBegin == line.npos)
+      throw parse_error(ctx, "Could not find member class name");
+    const auto classEnd = line.find_first_of(" \t", classBegin);
+    if (classEnd == line.npos)
+      throw parse_error(ctx, "Could not find member name");
+
+    const auto member_class_name = line.substr(classBegin, classEnd - classBegin);
+
+    const auto nameBegin = line.find_first_not_of(" \t", classEnd);
+    if (nameBegin == line.npos)
+      throw parse_error(ctx, "Could not find member name");
+    const auto nameEnd = line.find_first_of(" \t", nameBegin);
+
+    const auto member_name = (nameEnd == line.npos) ? line.substr(nameBegin) : line.substr(nameBegin, nameEnd - nameBegin);
+
+		ctx.os << "  const decltype(" + member_class_name + "(std::declval<" + ctx.class_name + "_t>())) " + member_name + " = " + member_class_name + "(*this);\n";
+	}
+
   void parse_class(parse_context& ctx, const std::string& line)
   {
     if (not ctx.class_name.empty())
@@ -388,7 +411,7 @@ namespace
             }
           }
           ctx.os << ctx.line.substr(0, pos_first_char);
-          ctx.os << ctx.line.substr(pos_first_char + 1);
+          ctx.os << ctx.line.substr(pos_first_char + 1) << '\n';
           ctx.previous_line_type = LineType::Cpp;
           break;
         case '$':  // opening / closing class or text line
@@ -403,6 +426,10 @@ namespace
             write_class_footer(ctx);
             ctx.class_name.clear();
             ctx.parent_class_name.clear();
+          }
+          else if (starts_with(rest, "member"))
+          {
+            parse_member(ctx, ctx.line.substr(pos_first_char + 1));
           }
           else if (starts_with(rest, "|"))  // trim left
           {

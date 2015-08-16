@@ -1,5 +1,5 @@
-#ifndef KISTE_H
-#define KISTE_H
+#ifndef KISS_TEMPLATES_KISTE_H
+#define KISS_TEMPLATES_KISTE_H
 
 #include <ostream>
 

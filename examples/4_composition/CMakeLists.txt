@@ -22,9 +22,29 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-add_subdirectory(0_hello_world)
-add_subdirectory(1_functions)
-add_subdirectory(2_cpp)
-add_subdirectory(3_inheritance)
-add_subdirectory(4_composition)
+function(add_kiss_templates KISTE_NAME)
+  set(templates "")
+  foreach(kiste ${ARGN})
+    get_filename_component(source ${kiste} ABSOLUTE)
+    get_filename_component(basename ${kiste} NAME_WE)
+
+    set(dest ${CMAKE_CURRENT_BINARY_DIR}/${basename}.h)
+
+    set(templates ${templates} ${dest})
+		add_custom_command(
+			OUTPUT ${dest}
+			COMMAND ${CMAKE_BINARY_DIR}/src/kiste2cpp ${source} > ${dest}
+			DEPENDS ${source} kiste2cpp
+			)
+  endforeach()
+
+	add_custom_target(${KISTE_NAME} DEPENDS ${templates})
+endfunction()
+
+add_kiss_templates(composition_templates sample.kt helper.kt)
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../include)
+add_executable(composition test.cpp)
+add_dependencies(composition composition_templates kiste)
+target_link_libraries(composition PRIVATE kiste)
 
