@@ -20,12 +20,12 @@ namespace
     return true;
   }
 
-	enum class LineType
-	{
-		None,
-		Cpp,
-		Text
-	};
+  enum class LineType
+  {
+    None,
+    Cpp,
+    Text
+  };
 
   struct parse_context
   {
@@ -37,9 +37,9 @@ namespace
     std::size_t class_curly_level = 0;
     std::size_t curly_level = 0;
     bool trailing_return = true;
-		bool stream_opened = false;
-		bool string_opened = false;
-		LineType previous_line_type = LineType::None;
+    bool stream_opened = false;
+    bool string_opened = false;
+    LineType previous_line_type = LineType::None;
     std::string class_name;
     std::string parent_class_name;
 
@@ -47,65 +47,73 @@ namespace
     {
     }
 
-		void open_string()
-		{
-			if (not stream_opened)
-			{
-				os << "_os << ";
-				stream_opened = true;
-			}
+    void open_string()
+    {
+      if (not stream_opened)
+      {
+        os << "_os << ";
+        stream_opened = true;
+      }
 
-			if (not string_opened)
-			{
-				os << "\"";
-				string_opened = true;
-			}
-		}
+      if (not string_opened)
+      {
+        os << "\"";
+        string_opened = true;
+      }
+    }
 
-		void write_char(char c)
-		{
-			open_string();
-			os << c;
-		}
+    void write_char(char c)
+    {
+      open_string();
+      switch (c)
+      {
+      case '\\':
+      case '\"':
+        os << "\\";
+      default:
+        break;
+      }
+      os << c;
+    }
 
-		void close_string()
-		{
-			if (string_opened)
-			{
-				os << "\"";
-				string_opened = false;
-			}
-		}
+    void close_string()
+    {
+      if (string_opened)
+      {
+        os << "\"";
+        string_opened = false;
+      }
+    }
 
-		void close_stream()
-		{
-			close_string();
-			if (stream_opened)
-			{
-				os << ";";
-				stream_opened = false;
-			}
-		}
+    void close_stream()
+    {
+      close_string();
+      if (stream_opened)
+      {
+        os << ";";
+        stream_opened = false;
+      }
+    }
 
-		void close_text()
-		{
-			if (previous_line_type == LineType::Text)
-			{
-				close_stream();
-				os << "\n";
-			}
-			previous_line_type = LineType::None;
-		}
+    void close_text()
+    {
+      if (previous_line_type == LineType::Text)
+      {
+        close_stream();
+        os << "\n";
+      }
+      previous_line_type = LineType::None;
+    }
 
-		void open_text()
-		{
-			os << "\n";
-			if (stream_opened)
-			{
-				os << "       ";
-			}
-			previous_line_type = LineType::Text;
-		}
+    void open_text()
+    {
+      os << "\n";
+      if (stream_opened)
+      {
+        os << "       ";
+      }
+      previous_line_type = LineType::Text;
+    }
   };
 
   struct parse_error : public std::runtime_error
@@ -134,22 +142,22 @@ namespace
     else if (ctx.line.at(pos) == '|')
     {
       ctx.trailing_return = false;
-			if (pos != ctx.line.size() - 1)
-			{
-				throw parse_error(ctx, "Trailing characters after trim-right ($|)");
-			}
+      if (pos != ctx.line.size() - 1)
+      {
+        throw parse_error(ctx, "Trailing characters after trim-right ($|)");
+      }
       return pos + 1;
     }
     else if (ctx.line.at(pos) == '{')
     {
-			ctx.close_stream();
+      ctx.close_stream();
       ctx.os << " _serialize(";
       pos += 1;
       arg_curly_level = 1;
     }
     else if (ctx.line.substr(pos, 5) == "call{")
     {
-			ctx.close_stream();
+      ctx.close_stream();
       ctx.os << " (";
       pos += 5;
       arg_curly_level = 1;
@@ -164,23 +172,23 @@ namespace
     {
       switch (ctx.line.at(pos))
       {
-        case '{':
-          ++arg_curly_level;
+      case '{':
+        ++arg_curly_level;
+        ctx.os << ctx.line.at(pos);
+        break;
+      case '}':
+        --arg_curly_level;
+        if (arg_curly_level)
+        {
           ctx.os << ctx.line.at(pos);
-          break;
-        case '}':
-          --arg_curly_level;
-          if (arg_curly_level)
-          {
-            ctx.os << ctx.line.at(pos);
-          }
-          else
-          {
-            ctx.os << "); ";
-          }
-          break;
-        default:
-          ctx.os << ctx.line.at(pos);
+        }
+        else
+        {
+          ctx.os << "); ";
+        }
+        break;
+      default:
+        ctx.os << ctx.line.at(pos);
       }
     }
     return pos - 1;
@@ -188,7 +196,7 @@ namespace
 
   auto parse_text_line(parse_context& ctx) -> void
   {
-		ctx.open_text();
+    ctx.open_text();
     if (ctx.curly_level <= ctx.class_curly_level)
       throw parse_error(ctx, "Unexpected text outside of function");
     ctx.os << "  ";
@@ -200,18 +208,19 @@ namespace
     {
       switch (ctx.line.at(i))
       {
-        case '$':
-          i = parse_arg(ctx, ++i);
-          break;
-        default:
-          ctx.write_char(ctx.line.at(i));
+      case '$':
+        i = parse_arg(ctx, ++i);
+        break;
+      default:
+        ctx.write_char(ctx.line.at(i));
       }
     }
     if (ctx.trailing_return)
-		{
-      ctx.write_char('\\'); ctx.write_char('n');
-		}
-		ctx.close_string();
+    {
+      ctx.write_char('\\');
+      ctx.write_char('n');
+    }
+    ctx.close_string();
   }
 
   void write_header(parse_context& ctx)
@@ -352,66 +361,66 @@ namespace
       {
         switch (ctx.line.at(pos_first_char))
         {
-          case '%':  // cpp line
-						switch(ctx.previous_line_type)
-						{
-						case LineType::None:
-							break;
-						case LineType::Cpp:
-							break;
-						case LineType::Text:
-							ctx.close_text();
-						}
-						for (const auto& c : ctx.line)
-            {
-              switch (c)
-              {
-                case '{':
-                  ++ctx.curly_level;
-                  break;
-                case '}':
-                  if (ctx.curly_level == 0)
-                    throw parse_error(ctx, "Too many closing curly braces in C++");
-                  --ctx.curly_level;
-                  break;
-                default:
-                  break;
-              }
-            }
-            ctx.os << ctx.line.substr(0, pos_first_char);
-            ctx.os << ctx.line.substr(pos_first_char + 1);
-						ctx.previous_line_type = LineType::Cpp;
+        case '%':  // cpp line
+          switch (ctx.previous_line_type)
+          {
+          case LineType::None:
             break;
-          case '$': // opening / closing class or text line
-						{
-							const auto rest = ctx.line.substr(pos_first_char + 1);
-							if (starts_with(rest, "class"))
-							{
-								parse_class(ctx, ctx.line.substr(pos_first_char + 1));
-							}
-							else if (starts_with(rest, "endclass"))
-							{
-								write_class_footer(ctx);
-								ctx.class_name.clear();
-								ctx.parent_class_name.clear();
-							}
-							else if (starts_with(rest, "|"))// trim left
-							{
-								ctx.line = ctx.line.substr(pos_first_char + 2);
-								if (ctx.line.find_first_not_of(" \t") == ctx.line.npos)
-								{
-									std::cout << "Warning: No non-space characters after trim left ($|)" << std::endl;
-								}
-								parse_text_line(ctx);
-							}
-							else
-							{
-								parse_text_line(ctx);
-							}
-						}
+          case LineType::Cpp:
+            break;
+          case LineType::Text:
+            ctx.close_text();
+          }
+          for (const auto& c : ctx.line)
+          {
+            switch (c)
+            {
+            case '{':
+              ++ctx.curly_level;
+              break;
+            case '}':
+              if (ctx.curly_level == 0)
+                throw parse_error(ctx, "Too many closing curly braces in C++");
+              --ctx.curly_level;
+              break;
+            default:
+              break;
+            }
+          }
+          ctx.os << ctx.line.substr(0, pos_first_char);
+          ctx.os << ctx.line.substr(pos_first_char + 1);
+          ctx.previous_line_type = LineType::Cpp;
           break;
-					default:
+        case '$':  // opening / closing class or text line
+        {
+          const auto rest = ctx.line.substr(pos_first_char + 1);
+          if (starts_with(rest, "class"))
+          {
+            parse_class(ctx, ctx.line.substr(pos_first_char + 1));
+          }
+          else if (starts_with(rest, "endclass"))
+          {
+            write_class_footer(ctx);
+            ctx.class_name.clear();
+            ctx.parent_class_name.clear();
+          }
+          else if (starts_with(rest, "|"))  // trim left
+          {
+            ctx.line = ctx.line.substr(pos_first_char + 2);
+            if (ctx.line.find_first_not_of(" \t") == ctx.line.npos)
+            {
+              std::cout << "Warning: No non-space characters after trim left ($|)" << std::endl;
+            }
             parse_text_line(ctx);
+          }
+          else
+          {
+            parse_text_line(ctx);
+          }
+        }
+        break;
+        default:
+          parse_text_line(ctx);
         }
       }
     }
