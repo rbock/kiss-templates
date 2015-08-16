@@ -151,6 +151,12 @@ This will get rid of the leading spaces and the trailing return, yielding someth
 ### Text:
 Text is everything else, as long as it is inside a function of a template class.
 
+## Serializer classes:
+The interface of a serializer has to have 
+
+  - `auto get_ostream() -> std::ostream&;` This function is called by the kiss templates to obtain the stream to which they send their texts.
+  - `auto operator()(...) -> void;` This operator is called with expressions from `${whatever}`. Make it accept whatever you need and like.
+
 ## Further education
 This is pretty much it.
 
