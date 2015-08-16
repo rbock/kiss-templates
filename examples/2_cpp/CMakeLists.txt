@@ -22,13 +22,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-add_custom_command(
-	OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sample.h
-	COMMAND ${CMAKE_BINARY_DIR}/src/kiste2cpp ${CMAKE_CURRENT_LIST_DIR}/sample.kiste > ${CMAKE_CURRENT_BINARY_DIR}/sample.h
-	DEPENDS ${CMAKE_CURRENT_LIST_DIR}/sample.kiste kiste2cpp
-	)
-
-add_custom_target(cpp_templates DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sample.h)
+add_kiss_templates(cpp_templates sample.kiste)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../include)
 add_executable(cpp test.cpp ${CMAKE_CURRENT_BINARY_DIR}/sample.h)
