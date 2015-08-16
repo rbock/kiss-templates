@@ -4,7 +4,7 @@
 
   %auto title() const -> void
   %{
-    Parent$|
+    $|Parent$|
   %}
 
   %auto render() const -> void
