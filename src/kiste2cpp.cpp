@@ -217,8 +217,8 @@ namespace
     }
     if (ctx.trailing_return)
     {
-      ctx.write_char('\\');
-      ctx.write_char('n');
+      ctx.open_string();
+      ctx.os << "\\n";
     }
     ctx.close_string();
   }
