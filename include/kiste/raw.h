@@ -20,6 +20,11 @@ namespace kiste
 		raw& operator=(raw&&) = default;
 		~raw() = default;
 
+		auto get_ostream() -> std::ostream&
+		{
+			return _os;
+		}
+
     template <typename T>
     auto operator()(T&& t) const -> void
     {

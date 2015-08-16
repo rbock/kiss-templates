@@ -20,6 +20,11 @@ namespace kiste
 		html& operator=(html&&) = default;
 		~html() = default;
 
+		auto get_ostream() -> std::ostream&
+		{
+			return _os;
+		}
+
     auto operator()(const bool& t) const -> void
     {
       _os << t;

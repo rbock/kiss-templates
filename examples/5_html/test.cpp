@@ -28,8 +28,8 @@ int main()
 {
 	const auto data = Data{};
 	auto& os = std::cout;
-	const auto serializer = kiste::html{os};
-	auto sample = test::Sample(data, os, serializer);
+	auto serializer = kiste::html{os};
+	auto sample = test::Sample(data, serializer);
 
 	sample.render();
 }

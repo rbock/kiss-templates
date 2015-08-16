@@ -4,7 +4,7 @@
 
   %auto render() const -> void
   %{
-    Hello ${data}!
+    Hello ${data.name}!
   %}
 
   $endclass
