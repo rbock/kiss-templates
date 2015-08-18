@@ -296,11 +296,11 @@ namespace
       parse_parent_class(ctx, line.substr(nameEnd));
     };
 
-    ctx.os << "template<typename _Derived, typename _Data, typename _Serializer>\n";
+    ctx.os << "template<typename DERIVED_T, typename _DATA_T, typename SERIALIZER_T>\n";
     ctx.os << "struct " + ctx.class_name << "_t";
     if (not ctx.parent_class_name.empty())
     {
-      ctx.os << ": public " + ctx.parent_class_name + "_t<" + ctx.class_name + "_t<_Derived, _Data, _Serializer>, _Data, _Serializer>";
+      ctx.os << ": public " + ctx.parent_class_name + "_t<" + ctx.class_name + "_t<DERIVED_T, _DATA_T, SERIALIZER_T>, _DATA_T, SERIALIZER_T>";
     }
     ctx.os << "\n";
     ctx.os << "{\n";
@@ -308,19 +308,19 @@ namespace
     // data members
     if (not ctx.parent_class_name.empty())
     {
-      ctx.os << "  using _parent_t = " + ctx.parent_class_name + "_t<" + ctx.class_name + "_t, _Data, _Serializer>;\n";
+      ctx.os << "  using _parent_t = " + ctx.parent_class_name + "_t<" + ctx.class_name + "_t, _DATA_T, SERIALIZER_T>;\n";
       ctx.os << "  const _parent_t& parent;\n";
     }
-    ctx.os << "  const _Derived& child;\n";
-    ctx.os << "  using _data_t = _Data;\n";
+    ctx.os << "  const DERIVED_T& child;\n";
+    ctx.os << "  using _data_t = _DATA_T;\n";
     ctx.os << "  const _data_t& data;\n";
     ctx.os << "  std::ostream& _os;\n";
-    ctx.os << "  using _serializer_t = _Serializer;\n";
+    ctx.os << "  using _serializer_t = SERIALIZER_T;\n";
     ctx.os << "  _serializer_t _serialize;\n";
     ctx.os << "\n";
 
     // constructor
-    ctx.os << "  " + ctx.class_name + "_t(const _Derived& derived, const _Data& data_, _Serializer& serialize):\n";
+    ctx.os << "  " + ctx.class_name + "_t(const DERIVED_T& derived, const _DATA_T& data_, SERIALIZER_T& serialize):\n";
     if (not ctx.parent_class_name.empty())
     {
       ctx.os << "    _parent_t{*this, data_, serialize},\n";
@@ -346,9 +346,9 @@ namespace
     ctx.os << "};\n\n";
 
 		ctx.os << "#line " << ctx.line_no << " \n";
-    ctx.os << "template<typename _Data, typename _Serializer>\n";
-    ctx.os << "auto " + ctx.class_name + "(const _Data& data, _Serializer& serialize)\n";
-    ctx.os << "  -> " + ctx.class_name + "_t<kiste::terminal_t, _Data, _Serializer>\n";
+    ctx.os << "template<typename _DATA_T, typename SERIALIZER_T>\n";
+    ctx.os << "auto " + ctx.class_name + "(const _DATA_T& data, SERIALIZER_T& serialize)\n";
+    ctx.os << "  -> " + ctx.class_name + "_t<kiste::terminal_t, _DATA_T, SERIALIZER_T>\n";
     ctx.os << "{\n";
     ctx.os << "  return {kiste::terminal, data, serialize};\n";
     ctx.os << "}\n";
