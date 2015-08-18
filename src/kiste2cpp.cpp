@@ -107,7 +107,8 @@ namespace
 
     void open_text()
     {
-      os << "\n";
+			if (previous_line_type == LineType::Text)
+				os << "\n";
       if (stream_opened)
       {
         os << "       ";
@@ -233,6 +234,7 @@ namespace
     ctx.os << "#pragma once\n";
     ctx.os << "#include <kiste/terminal.h>\n";
     ctx.os << "\n";
+		ctx.os << "#line " << 1 << " \"" << ctx.filename << "\"\n";
   }
 
   void parse_parent_class(parse_context& ctx, const std::string& line)
@@ -331,6 +333,7 @@ namespace
     ctx.os << "  {}\n";
 
     ctx.os << "  // ----------------------------------------------------------------------\n";
+		ctx.os << "#line " << ctx.line_no + 1 << " \n";
   }
 
   void write_class_footer(const parse_context& ctx)
@@ -339,8 +342,10 @@ namespace
       throw parse_error(ctx, "No class to end here");
 
     ctx.os << "  // ----------------------------------------------------------------------\n";
+		ctx.os << "#line " << ctx.line_no << " \n";
     ctx.os << "};\n\n";
 
+		ctx.os << "#line " << ctx.line_no << " \n";
     ctx.os << "template<typename _Data, typename _Serializer>\n";
     ctx.os << "auto " + ctx.class_name + "(const _Data& data, _Serializer& serialize)\n";
     ctx.os << "  -> " + ctx.class_name + "_t<kiste::terminal_t, _Data, _Serializer>\n";
@@ -348,6 +353,7 @@ namespace
     ctx.os << "  return {kiste::terminal, data, serialize};\n";
     ctx.os << "}\n";
     ctx.os << "\n";
+		ctx.os << "#line " << ctx.line_no + 1 << " \n";
   }
 
   void write_footer(const parse_context& ctx)
