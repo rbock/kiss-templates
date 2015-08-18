@@ -22,6 +22,9 @@
       <BODY bgcolor="${data.backgroundColor}">
       <h1>${data.documentTitle}</h1>
 
+			%// <!-- ${} is escaped, but sometimes you don't want that -->
+			Raw HTML: $raw{"<br/>"}
+
       <FORM NAME="form" ACTION="${data.formUrl}" METHOD="POST" $call{linkTarget(data.formTarget)}>
         %for (auto param : data.params)
         %{

@@ -161,6 +161,13 @@ namespace
       pos += 1;
       arg_curly_level = 1;
     }
+    else if (ctx.line.substr(pos, 4) == "raw{")
+    {
+      ctx.close_stream();
+      ctx.os << " _os << (";
+      pos += 4;
+      arg_curly_level = 1;
+    }
     else if (ctx.line.substr(pos, 5) == "call{")
     {
       ctx.close_stream();
