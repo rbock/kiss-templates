@@ -369,7 +369,7 @@ namespace
       const auto pos_first_char = ctx.line.find_first_not_of(" \t");
       if (pos_first_char == ctx.line.npos)
       {
-        if (ctx.curly_level > ctx.class_curly_level)
+        if (not ctx.class_name.empty() and ctx.curly_level > ctx.class_curly_level)
         {
           parse_text_line(ctx);
         }
