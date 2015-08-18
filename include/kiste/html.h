@@ -25,11 +25,6 @@ namespace kiste
 			return _os;
 		}
 
-    auto operator()(const bool& t) const -> void
-    {
-      _os << t;
-    }
-
     auto operator()(const char& c) const -> void
     {
 			switch (c)
@@ -69,7 +64,7 @@ namespace kiste
     template <typename T, typename std::enable_if<std::is_convertible<T, std::string>::value>::type* = nullptr>
     auto operator()(const T& t) const -> void
     {
-			for (const auto& c : t)
+			for (const auto& c : std::string(t)) // maybe specialize for char* to avoid the constructor?
 			{
 				operator()(c);
 			}
