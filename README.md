@@ -68,7 +68,8 @@ Yeah!
   - `$class <name>` starts a template class
   - `$class <name> : <base>` starts a template class, which inherits from a base class
   - `$endclass` ends a template class
-  - `${<expression>}` send expression to serializer
+  - `${<expression>}` send expression to serializer (which takes care of encoding, quoting, escaping, etc)
+  - `$raw{<expression>}` send expression to the ostream directly (no escaping)
   - `$call{<function>}` call a function (do not serialize result)
   - `$|` trim left/right
   - `$$` and `$%` escape `$` and `%` respectively
@@ -123,6 +124,11 @@ As you saw in the initial example, the generated template code is initialized wi
   Size of names: ${entry.first.size() + entry.last.size()}
 %}
 ```
+
+The serializer takes care of the required escaping, quoting, encoding, etc.
+
+### Raw data
+Sometimes you need to actually output some text as is. Then use `$raw{expression}`. It will just pipe whatever you give it to the `ostream` directly.
 
 ### Calling functions:
 If you want to call a function without serializing the result (e.g. because the function returns `void`), you can enclose the call in `$call{}`.
