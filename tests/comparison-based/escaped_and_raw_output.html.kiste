@@ -1,0 +1,11 @@
+%namespace comparison_based_test
+%{
+  $class EscapedAndRawOutput
+
+  %auto render() const -> void
+  %{
+<a href="${data.myhref}" $raw{"class=\"mycssclass\""}>Link</a>
+  %}
+
+  $endclass
+%}

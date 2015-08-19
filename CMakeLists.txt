@@ -58,6 +58,7 @@ endif ()
 
 add_subdirectory(src)
 add_subdirectory(examples)
+add_subdirectory(tests)
 
 #install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/kiste" DESTINATION include)
 
