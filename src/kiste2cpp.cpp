@@ -284,7 +284,7 @@ namespace
 
     const auto member_name = (nameEnd == line.npos) ? line.substr(nameBegin) : line.substr(nameBegin, nameEnd - nameBegin);
 
-		ctx.os << "  " + member_class_name + "_t<::kiste::terminal_t, _data_t, _serializer_t> " + member_name + " = " + member_class_name + "(data, _serialize);\n";
+		ctx.os << "  " + member_class_name + "_t<" + ctx.class_name + "_t, _data_t, _serializer_t> " + member_name + " = " + member_class_name + "_t<" + ctx.class_name + "_t, _data_t, _serializer_t>{*this, data, _serialize};\n";
 	}
 
   void parse_class(parse_context& ctx, const std::string& line)
@@ -340,7 +340,7 @@ namespace
     ctx.os << "  {}\n";
 
     ctx.os << "  // ----------------------------------------------------------------------\n";
-		ctx.os << "#line " << ctx.line_no + 1 << " \n";
+		ctx.os << "#line " << ctx.line_no + 1 << "\n";
   }
 
   void write_class_footer(const parse_context& ctx)
@@ -349,10 +349,10 @@ namespace
       throw parse_error(ctx, "No class to end here");
 
     ctx.os << "  // ----------------------------------------------------------------------\n";
-		ctx.os << "#line " << ctx.line_no << " \n";
+		ctx.os << "#line " << ctx.line_no << "\n";
     ctx.os << "};\n\n";
 
-		ctx.os << "#line " << ctx.line_no << " \n";
+		ctx.os << "#line " << ctx.line_no << "\n";
     ctx.os << "template<typename _DATA_T, typename SERIALIZER_T>\n";
     ctx.os << "auto " + ctx.class_name + "(const _DATA_T& data, SERIALIZER_T& serialize)\n";
     ctx.os << "  -> " + ctx.class_name + "_t<kiste::terminal_t, _DATA_T, SERIALIZER_T>\n";
@@ -360,7 +360,7 @@ namespace
     ctx.os << "  return {kiste::terminal, data, serialize};\n";
     ctx.os << "}\n";
     ctx.os << "\n";
-		ctx.os << "#line " << ctx.line_no + 1 << " \n";
+		ctx.os << "#line " << ctx.line_no + 1 << "\n";
   }
 
   void write_footer(const parse_context& ctx)
