@@ -471,24 +471,65 @@ namespace
   }
 }
 
+auto usage(std::string reason = "") -> int
+{
+  if (not reason.empty())
+    std::cerr << "ERROR: " << reason << std::endl;
+
+  std::cerr << "Usage: kiste2cpp [--output OUTPUT_HEADER_FILENAME] SOURCE_FILENAME" << std::endl;
+  return 1;
+}
+
 auto main(int argc, char** argv) -> int
 {
-  if (argc != 2)
+  std::string source_file_path, output_file_path;
+
+  for (int i = 1; i < argc; ++i)
   {
-    std::cerr << "Usage: kiste2cpp <sourcefilename> {namespace}" << std::endl;
-    return 1;
+    if (std::string{argv[i]} == "--output")
+    {
+      if (i+1 < argc and output_file_path.empty())
+      {
+        output_file_path = argv[i+1];
+        ++i;
+      }
+      else
+      {
+        return usage("No output file given, or given twice");
+      }
+    }
+    else if (source_file_path.empty())
+    {
+      source_file_path = argv[i];
+    }
+    else
+    {
+      return usage(std::string{"Extra argument: "} + argv[i]);
+    }
   }
 
-  const auto source_file_name = std::string(argv[1]);
-
-  std::ifstream ifs{source_file_name};
+  std::ifstream ifs{source_file_path};
   if (not ifs)
   {
-    std::cerr << "Could not open " << source_file_name << std::endl;
+    std::cerr << "Could not open " << source_file_path << std::endl;
     return 1;
   }
 
-  auto ctx = parse_context{ifs, std::cout, source_file_name};
+  std::ostream* os = &std::cout;
+  std::ofstream ofs;
+  if (not output_file_path.empty())
+  {
+    ofs.open(output_file_path, std::ios::out);
+    if (not ofs)
+    {
+      std::cerr << "Could not open output file " << output_file_path << std::endl;
+      return 1;
+    }
+
+    os = &ofs;
+  }
+
+  auto ctx = parse_context{ifs, *os, source_file_path};
 
   try
   {
@@ -496,7 +537,6 @@ auto main(int argc, char** argv) -> int
     parse(ctx);
     write_footer(ctx);
   }
-
   catch (const parse_error& e)
   {
     std::cerr << "Parse error in file: " << ctx.filename << std::endl;
@@ -504,6 +544,6 @@ auto main(int argc, char** argv) -> int
     std::cerr << "Message: " << e.what() << std::endl;
     std::cerr << "Line: " << e.line << std::endl;
     return 1;
-  };
+  }
 }
 
