@@ -284,7 +284,7 @@ namespace
 
     const auto member_name = (nameEnd == line.npos) ? line.substr(nameBegin) : line.substr(nameBegin, nameEnd - nameBegin);
 
-		ctx.os << "  " + member_class_name + "_t<::kiste::terminal_t, _data_t, _serializer_t> " + member_name + " = " + member_class_name + "(data, _serialize);\n";
+		ctx.os << "  " + member_class_name + "_t<" + ctx.class_name + "_t, _data_t, _serializer_t> " + member_name + " = " + member_class_name + "_t<" + ctx.class_name + "_t, _data_t, _serializer_t>{*this, data, _serialize};\n";
 	}
 
   void parse_class(parse_context& ctx, const std::string& line)

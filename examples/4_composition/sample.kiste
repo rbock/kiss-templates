@@ -5,6 +5,11 @@
   $class Sample
   $member Helper helper
 
+	%auto getName() const -> std::string
+	%{
+		%return "Sam Sample";
+	%}
+
   %auto render() const -> void
   %{
     Helper's answer: ${helper.getAnswer()}.

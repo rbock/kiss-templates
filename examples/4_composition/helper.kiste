@@ -8,7 +8,7 @@
 
   %auto render() const -> void
   %{
-    $|Hope that helps!$|
+    $|Hope that helps, dear ${child.getName()}!$|
   %}
 
   $endclass
