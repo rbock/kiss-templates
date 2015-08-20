@@ -31,14 +31,14 @@ function(add_kiss_templates KISTE_NAME)
     set(dest ${CMAKE_CURRENT_BINARY_DIR}/${basename}.h)
 
     set(templates ${templates} ${dest})
-		add_custom_command(
-			OUTPUT ${dest}
-			COMMAND ${CMAKE_BINARY_DIR}/src/kiste2cpp ${source} > ${dest}
-			DEPENDS ${source} kiste2cpp
-			)
+    add_custom_command(
+      OUTPUT ${dest}
+      COMMAND $<TARGET_FILE:kiste2cpp> ${source} > ${dest}
+      DEPENDS ${source} kiste2cpp
+      )
   endforeach()
 
-	add_custom_target(${KISTE_NAME} DEPENDS ${templates})
+  add_custom_target(${KISTE_NAME} DEPENDS ${templates})
 endfunction()
 
 add_subdirectory(0_hello_world)
