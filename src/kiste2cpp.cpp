@@ -129,9 +129,45 @@ namespace
     }
   };
 
+	auto parse_expression(const parse_context& ctx, std::size_t& pos) -> std::string
+	{
+		auto expression = std::string{};
+    auto arg_curly_level = 1;
+
+    for (; pos < ctx.line.size() and arg_curly_level; ++pos)
+    {
+      switch (ctx.line.at(pos))
+      {
+      case '{':
+        ++arg_curly_level;
+        expression.push_back(ctx.line.at(pos));
+        break;
+      case '}':
+        --arg_curly_level;
+        if (arg_curly_level)
+        {
+					expression.push_back(ctx.line.at(pos));
+        }
+        else
+        {
+          // do nothing;
+        }
+        break;
+      default:
+				expression.push_back(ctx.line.at(pos));
+      }
+    }
+		if (arg_curly_level > 0)
+		{
+			throw parse_error(ctx, "missing closing brace");
+		}
+		--pos;
+
+    return expression;
+  }
+
   auto parse_arg(parse_context& ctx, std::size_t pos) -> std::size_t
   {
-    auto arg_curly_level = 0;
 
     // std::clog << "----------------------------------" << std::endl;
     // std::clog << "line: " << ctx.line.substr(pos) << std::endl;
@@ -157,23 +193,21 @@ namespace
     else if (ctx.line.at(pos) == '{')
     {
       ctx.close_stream();
-      ctx.os << " _serialize(";
       pos += 1;
-      arg_curly_level = 1;
+      ctx.os << " _serialize(" << parse_expression(ctx, pos) << "); ";
     }
     else if (ctx.line.substr(pos, 4) == "raw{")
     {
       ctx.close_stream();
-      ctx.os << " _os << (";
       pos += 4;
-      arg_curly_level = 1;
+      ctx.os << " _os << (" << parse_expression(ctx, pos) << "); ";
     }
     else if (ctx.line.substr(pos, 5) == "call{")
     {
       ctx.close_stream();
-      ctx.os << " (";
       pos += 5;
-      arg_curly_level = 1;
+			const auto expression = parse_expression(ctx, pos);
+      ctx.os << " static_assert(std::is_same<decltype(" << expression << "), void>::value, \"$call{} requires void expression\"); (" << expression << "); ";
     }
     else
     {
@@ -181,31 +215,8 @@ namespace
     }
     // std::clog << "----------------------------------" << std::endl;
 
-    for (; pos < ctx.line.size() and arg_curly_level; ++pos)
-    {
-      switch (ctx.line.at(pos))
-      {
-      case '{':
-        ++arg_curly_level;
-        ctx.os << ctx.line.at(pos);
-        break;
-      case '}':
-        --arg_curly_level;
-        if (arg_curly_level)
-        {
-          ctx.os << ctx.line.at(pos);
-        }
-        else
-        {
-          ctx.os << "); ";
-        }
-        break;
-      default:
-        ctx.os << ctx.line.at(pos);
-      }
-    }
-    return pos - 1;
-  }
+		return pos;
+	}
 
   auto parse_text_line(parse_context& ctx) -> void
   {
@@ -333,10 +344,10 @@ namespace
     if (not ctx.parent_class_name.empty())
     {
       ctx.os << "    _parent_t{*this, data_, serialize},\n";
-      ctx.os << "    parent{*this},\n";
+      ctx.os << "    parent(*this),\n";
     }
-    ctx.os << "    child{derived},\n";
-    ctx.os << "    data{data_},\n";
+    ctx.os << "    child(derived),\n";
+    ctx.os << "    data(data_),\n";
     ctx.os << "    _os(serialize.get_ostream()),\n";
     ctx.os << "    _serialize(serialize)\n";
     ctx.os << "  {}\n";
