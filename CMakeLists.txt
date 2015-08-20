@@ -56,6 +56,25 @@ target_compile_features(kiste INTERFACE
   )
 endif ()
 
+function(add_kiss_templates KISTE_NAME)
+  set(templates "")
+  foreach(kiste ${ARGN})
+    get_filename_component(source ${kiste} ABSOLUTE)
+    get_filename_component(basename ${kiste} NAME_WE)
+
+    set(dest ${CMAKE_CURRENT_BINARY_DIR}/${basename}.h)
+
+    set(templates ${templates} ${dest})
+    add_custom_command(
+      OUTPUT ${dest}
+      COMMAND $<TARGET_FILE:kiste2cpp> ${source} > ${dest}
+      DEPENDS ${source} kiste2cpp
+      )
+  endforeach()
+
+  add_custom_target(${KISTE_NAME} DEPENDS ${templates})
+endfunction()
+
 add_subdirectory(src)
 add_subdirectory(examples)
 add_subdirectory(tests)

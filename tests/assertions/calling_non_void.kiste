@@ -1,0 +1,18 @@
+%namespace assert_test
+%{
+  $class CallingNonVoid
+
+  %auto getName() const -> std::string
+	%{
+		return "Herb";
+  %}
+
+  %auto render() const -> void
+  %{
+		%// This must raise a static_assert
+		%// (getName() does not return void)
+    Hello, $call{getName()}!
+  %}
+
+  $endclass
+%}
