@@ -1,0 +1,8 @@
+Each test is named "test_name.serializer_type.kiste", where serializer_type is one of the built-in serializers
+of kiss-templates (e.g. raw, html). The file "test_name.serializer_type.expected" defines the expected output of the
+rendered template. If a file "test_name.serializer_type.data" is given, it must contain source code to create a variable
+"data" that is passed in to the template.
+
+The test runner simply compares the expected with the actual output.
+
+After adding a new test, you have to run CMake again.

@@ -129,9 +129,45 @@ namespace
     }
   };
 
+	auto parse_expression(const parse_context& ctx, std::size_t& pos) -> std::string
+	{
+		auto expression = std::string{};
+    auto arg_curly_level = 1;
+
+    for (; pos < ctx.line.size() and arg_curly_level; ++pos)
+    {
+      switch (ctx.line.at(pos))
+      {
+      case '{':
+        ++arg_curly_level;
+        expression.push_back(ctx.line.at(pos));
+        break;
+      case '}':
+        --arg_curly_level;
+        if (arg_curly_level)
+        {
+					expression.push_back(ctx.line.at(pos));
+        }
+        else
+        {
+          // do nothing;
+        }
+        break;
+      default:
+				expression.push_back(ctx.line.at(pos));
+      }
+    }
+		if (arg_curly_level > 0)
+		{
+			throw parse_error(ctx, "missing closing brace");
+		}
+		--pos;
+
+    return expression;
+  }
+
   auto parse_arg(parse_context& ctx, std::size_t pos) -> std::size_t
   {
-    auto arg_curly_level = 0;
 
     // std::clog << "----------------------------------" << std::endl;
     // std::clog << "line: " << ctx.line.substr(pos) << std::endl;
@@ -157,23 +193,21 @@ namespace
     else if (ctx.line.at(pos) == '{')
     {
       ctx.close_stream();
-      ctx.os << " _serialize(";
       pos += 1;
-      arg_curly_level = 1;
+      ctx.os << " _serialize(" << parse_expression(ctx, pos) << "); ";
     }
     else if (ctx.line.substr(pos, 4) == "raw{")
     {
       ctx.close_stream();
-      ctx.os << " _os << (";
       pos += 4;
-      arg_curly_level = 1;
+      ctx.os << " _os << (" << parse_expression(ctx, pos) << "); ";
     }
     else if (ctx.line.substr(pos, 5) == "call{")
     {
       ctx.close_stream();
-      ctx.os << " (";
       pos += 5;
-      arg_curly_level = 1;
+			const auto expression = parse_expression(ctx, pos);
+      ctx.os << " static_assert(std::is_same<decltype(" << expression << "), void>::value, \"$call{} requires void expression\"); (" << expression << "); ";
     }
     else
     {
@@ -181,31 +215,8 @@ namespace
     }
     // std::clog << "----------------------------------" << std::endl;
 
-    for (; pos < ctx.line.size() and arg_curly_level; ++pos)
-    {
-      switch (ctx.line.at(pos))
-      {
-      case '{':
-        ++arg_curly_level;
-        ctx.os << ctx.line.at(pos);
-        break;
-      case '}':
-        --arg_curly_level;
-        if (arg_curly_level)
-        {
-          ctx.os << ctx.line.at(pos);
-        }
-        else
-        {
-          ctx.os << "); ";
-        }
-        break;
-      default:
-        ctx.os << ctx.line.at(pos);
-      }
-    }
-    return pos - 1;
-  }
+		return pos;
+	}
 
   auto parse_text_line(parse_context& ctx) -> void
   {
@@ -333,10 +344,10 @@ namespace
     if (not ctx.parent_class_name.empty())
     {
       ctx.os << "    _parent_t{*this, data_, serialize},\n";
-      ctx.os << "    parent{*this},\n";
+      ctx.os << "    parent(*this),\n";
     }
-    ctx.os << "    child{derived},\n";
-    ctx.os << "    data{data_},\n";
+    ctx.os << "    child(derived),\n";
+    ctx.os << "    data(data_),\n";
     ctx.os << "    _os(serialize.get_ostream()),\n";
     ctx.os << "    _serialize(serialize)\n";
     ctx.os << "  {}\n";
@@ -471,24 +482,65 @@ namespace
   }
 }
 
+auto usage(std::string reason = "") -> int
+{
+  if (not reason.empty())
+    std::cerr << "ERROR: " << reason << std::endl;
+
+  std::cerr << "Usage: kiste2cpp [--output OUTPUT_HEADER_FILENAME] SOURCE_FILENAME" << std::endl;
+  return 1;
+}
+
 auto main(int argc, char** argv) -> int
 {
-  if (argc != 2)
+  std::string source_file_path, output_file_path;
+
+  for (int i = 1; i < argc; ++i)
   {
-    std::cerr << "Usage: kiste2cpp <sourcefilename> {namespace}" << std::endl;
-    return 1;
+    if (std::string{argv[i]} == "--output")
+    {
+      if (i+1 < argc and output_file_path.empty())
+      {
+        output_file_path = argv[i+1];
+        ++i;
+      }
+      else
+      {
+        return usage("No output file given, or given twice");
+      }
+    }
+    else if (source_file_path.empty())
+    {
+      source_file_path = argv[i];
+    }
+    else
+    {
+      return usage(std::string{"Extra argument: "} + argv[i]);
+    }
   }
 
-  const auto source_file_name = std::string(argv[1]);
-
-  std::ifstream ifs{source_file_name};
+  std::ifstream ifs{source_file_path};
   if (not ifs)
   {
-    std::cerr << "Could not open " << source_file_name << std::endl;
+    std::cerr << "Could not open " << source_file_path << std::endl;
     return 1;
   }
 
-  auto ctx = parse_context{ifs, std::cout, source_file_name};
+  std::ostream* os = &std::cout;
+  std::ofstream ofs;
+  if (not output_file_path.empty())
+  {
+    ofs.open(output_file_path, std::ios::out);
+    if (not ofs)
+    {
+      std::cerr << "Could not open output file " << output_file_path << std::endl;
+      return 1;
+    }
+
+    os = &ofs;
+  }
+
+  auto ctx = parse_context{ifs, *os, source_file_path};
 
   try
   {
@@ -496,7 +548,6 @@ auto main(int argc, char** argv) -> int
     parse(ctx);
     write_footer(ctx);
   }
-
   catch (const parse_error& e)
   {
     std::cerr << "Parse error in file: " << ctx.filename << std::endl;
@@ -504,6 +555,6 @@ auto main(int argc, char** argv) -> int
     std::cerr << "Message: " << e.what() << std::endl;
     std::cerr << "Line: " << e.line << std::endl;
     return 1;
-  };
+  }
 }
 

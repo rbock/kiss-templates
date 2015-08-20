@@ -22,7 +22,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 project(kiste VERSION 0.1 LANGUAGES CXX)
 
 enable_testing()
@@ -56,8 +56,28 @@ target_compile_features(kiste INTERFACE
   )
 endif ()
 
+function(add_kiss_templates KISTE_NAME)
+  set(templates "")
+  foreach(kiste ${ARGN})
+    get_filename_component(source ${kiste} ABSOLUTE)
+    get_filename_component(basename ${kiste} NAME_WE)
+
+    set(dest ${CMAKE_CURRENT_BINARY_DIR}/${basename}.h)
+
+    set(templates ${templates} ${dest})
+    add_custom_command(
+      OUTPUT ${dest}
+      COMMAND $<TARGET_FILE:kiste2cpp> ${source} > ${dest}
+      DEPENDS ${source} kiste2cpp
+      )
+  endforeach()
+
+  add_custom_target(${KISTE_NAME} DEPENDS ${templates})
+endfunction()
+
 add_subdirectory(src)
 add_subdirectory(examples)
+add_subdirectory(tests)
 
 #install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/kiste" DESTINATION include)
 
