@@ -33,7 +33,7 @@ target_include_directories(kiste INTERFACE
   $<BUILD_INTERFACE:${kiste_SOURCE_DIR}/include>
   )
 
-if (NOT MSVC)
+if (UNIX AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.4)
 target_compile_features(kiste INTERFACE
 	cxx_auto_type
 	cxx_constexpr
