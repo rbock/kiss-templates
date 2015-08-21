@@ -4,7 +4,7 @@
 
 struct Data
 {
-	float foo;
+	double foo;
 };
 
 int main()
