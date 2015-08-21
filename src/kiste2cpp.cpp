@@ -519,6 +519,9 @@ auto main(int argc, char** argv) -> int
     }
   }
 
+  if (source_file_path.empty())
+    return usage("No input file given");
+
   std::ifstream ifs{source_file_path};
   if (not ifs)
   {
