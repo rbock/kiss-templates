@@ -54,6 +54,12 @@ target_compile_features(kiste INTERFACE
 	cxx_template_template_parameters
   cxx_variadic_templates
   )
+else()
+  include(CheckCXXCompilerFlag)
+  CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+  if(COMPILER_SUPPORTS_CXX11)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  endif()
 endif ()
 
 function(add_kiss_templates KISTE_NAME)
