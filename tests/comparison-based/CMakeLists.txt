@@ -4,6 +4,12 @@ if(NOT PYTHONINTERP_FOUND)
   return()
 endif()
 
+find_package(Boost)
+if(NOT Boost_FOUND)
+  message(WARNING "Ignoring tests because Boost is not installed")
+  return()
+endif()
+
 file(GLOB ComparisonBasedTestInputs "*.kiste")
 set(ComparisonBasedTestOutputs "")
 foreach(ComparisonBasedTestInput ${ComparisonBasedTestInputs})
@@ -38,7 +44,7 @@ add_executable(
   ComparisonBasedTestRunner.cpp
   "${CMAKE_CURRENT_BINARY_DIR}/ComparisonBasedTestRunnerAllHeaders.src.h"
 )
-target_include_directories(ComparisonBasedTestRunner PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_include_directories(ComparisonBasedTestRunner PRIVATE "${CMAKE_CURRENT_BINARY_DIR}" ${Boost_INCLUDE_DIRS})
 target_link_libraries(ComparisonBasedTestRunner PRIVATE kiste)
 
 add_test(
