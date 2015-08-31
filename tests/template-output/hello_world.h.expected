@@ -1,0 +1,46 @@
+#pragma once
+#include <kiste/terminal.h>
+
+#line 1 "hello_world.kiste"
+namespace comparison_based_test
+{
+template<typename DERIVED_T, typename DATA_T, typename SERIALIZER_T>
+struct HelloWorld_t
+{
+  const DERIVED_T& child;
+  using _data_t = DATA_T;
+  const _data_t& data;
+  std::ostream& _os;
+  using _serializer_t = SERIALIZER_T;
+  _serializer_t _serialize;
+
+  HelloWorld_t(const DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):
+    child(derived),
+    data(data_),
+    _os(serialize.get_ostream()),
+    _serialize(serialize)
+  {}
+  // ----------------------------------------------------------------------
+#line 4
+
+  auto render() const -> void
+  {
+      _os << "    Hello, world!\n";
+  }
+
+  // ----------------------------------------------------------------------
+#line 10
+};
+
+#line 10
+template<typename DATA_T, typename SERIALIZER_T>
+auto HelloWorld(const DATA_T& data, SERIALIZER_T& serialize)
+  -> HelloWorld_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
+{
+  return {kiste::terminal, data, serialize};
+}
+
+#line 11
+}
+
+
