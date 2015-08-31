@@ -295,6 +295,11 @@ namespace
 
     const auto member_name = (nameEnd == line.npos) ? line.substr(nameBegin) : line.substr(nameBegin, nameEnd - nameBegin);
 
+		if (line.find_first_not_of(" \t", nameEnd) != line.npos)
+		{
+			throw parse_error(ctx, "unexpected characters after member declaration");
+		}
+
 		// The "using" is required for clang-3.1 and older g++ versions
 		const auto member_class_alias = member_class_name + "_t_alias";
 		ctx.os << "  using " + member_class_alias + " = " + member_class_name + "_t<" + ctx.class_name+ "_t, _data_t, _serializer_t>; " + member_class_alias + " " + member_name + " = " + member_class_alias + "{*this, data, _serialize};\n";
