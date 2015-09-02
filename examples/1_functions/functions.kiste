@@ -2,7 +2,7 @@
 %{
   $class Sample
 
-  %auto render() const -> void
+  %auto render() -> void
   %{
     You can call void functions: $call{render_bar()}.
 
@@ -14,18 +14,18 @@
     Some value: ${data.foo}.
   %}
 
-  %auto render_bar() const -> void
+  %auto render_bar() -> void
   %{
     This function renders some text.
     You can call functions again ${yield_int()}!$|
   %}
 
-  %auto yield_text() const -> std::string
+  %auto yield_text() -> std::string
   %{
     %return "Well, well, well...";
   %}
 
-  %auto yield_int() const -> int
+  %auto yield_int() -> int
   %{
     %return 42;
   %}

@@ -22,11 +22,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-add_subdirectory(0_hello_world)
-add_subdirectory(1_functions)
-add_subdirectory(2_cpp)
-add_subdirectory(3_inheritance)
-add_subdirectory(4_composition)
-add_subdirectory(5_html)
-add_subdirectory(6_exceptions)
+add_kiss_templates(exceptions_templates sample.kiste REPORT_EXCEPTIONS)
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../include)
+add_executable(exceptions test.cpp)
+add_dependencies(exceptions exceptions_templates kiste)
+target_link_libraries(exceptions PRIVATE kiste)

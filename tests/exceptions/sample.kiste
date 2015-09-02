@@ -1,0 +1,30 @@
+%#include <stdexcept>
+
+%namespace test
+%{
+  $class Sample
+
+  %auto throwInt(const std::string&) -> void
+  %{
+    %throw 7; // Don't do this at home, it is just a test
+  %}
+
+  %auto throwString(const std::string& target) -> std::string
+  %{
+    %throw std::string("seven"); // Again, this is just a test
+  %}
+
+  %auto throwRuntimeError(const std::string& target) -> std::string
+  %{
+    %throw std::runtime_error("seven");
+  %}
+
+  %auto render() -> void
+  %{
+    Throwing int: $call{throwInt("foo expression")}
+    Throwing string ${throwString("bar expression")}
+    Throwing runtime_error ${throwRuntimeError("more realisitic")}
+  %}
+
+  $endclass
+%}

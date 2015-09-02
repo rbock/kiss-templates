@@ -6,7 +6,7 @@ namespace kiste
   struct terminal_t
   {
   };
-  constexpr auto terminal = terminal_t{};
+  static auto terminal = terminal_t{};
 }
 
 #endif

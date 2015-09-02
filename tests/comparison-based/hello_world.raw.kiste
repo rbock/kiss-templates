@@ -2,7 +2,7 @@
 %{
   $class HelloWorld
 
-  %auto render() const -> void
+  %auto render() -> void
   %{
     Hello, world!
   %}

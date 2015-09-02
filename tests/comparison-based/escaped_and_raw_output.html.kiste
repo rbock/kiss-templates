@@ -2,7 +2,7 @@
 %{
   $class EscapedAndRawOutput
 
-  %auto render() const -> void
+  %auto render() -> void
   %{
 <a href="${data.myhref}" $raw{"class=\"mycssclass\""}>Link</a>
   %}

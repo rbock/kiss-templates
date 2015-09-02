@@ -2,7 +2,7 @@
 %{
   $class Sample
 
-  %auto linkTarget(const std::string& target) const -> void
+  %auto linkTarget(const std::string& target) -> void
   %{
     %if (not target.empty())
     %{
@@ -10,7 +10,7 @@
     %}
   %}
 
-  %auto render() const -> void
+  %auto render() -> void
   %{
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <HTML>
@@ -22,8 +22,8 @@
       <BODY bgcolor="${data.backgroundColor}">
       <h1>${data.documentTitle}</h1>
 
-			%// <!-- ${} is escaped, but sometimes you don't want that -->
-			Raw HTML: $raw{"<br/>"}
+      %// <!-- ${} is escaped, but sometimes you don't want that -->
+      Raw HTML: $raw{"<br/>"}
 
       <FORM NAME="form" ACTION="${data.formUrl}" METHOD="POST" $call{linkTarget(data.formTarget)}>
         %for (auto param : data.params)

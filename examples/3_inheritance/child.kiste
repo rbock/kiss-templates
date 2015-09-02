@@ -4,7 +4,7 @@
 %{
   $class Child : Parent
 
-  %auto body() const -> void
+  %auto body() -> void
   %{
     Child header.
 

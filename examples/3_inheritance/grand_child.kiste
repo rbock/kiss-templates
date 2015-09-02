@@ -4,7 +4,7 @@
 %{
   $class GrandChild : Child
 
-  %auto body() const -> void
+  %auto body() -> void
   %{
     Grand child's body.
 

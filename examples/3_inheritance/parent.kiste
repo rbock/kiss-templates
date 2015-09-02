@@ -2,12 +2,12 @@
 %{
   $class Parent
 
-  %auto title() const -> void
+  %auto title() -> void
   %{
     $|Parent$|
   %}
 
-  %auto render() const -> void
+  %auto render() -> void
   %{
     This is the parent's header.
 

@@ -1,12 +1,12 @@
 %namespace test
 %{
   $class Helper
-  %auto getAnswer() const -> int
+  %auto getAnswer() -> int
   %{
     %return 42;
   %}
 
-  %auto render() const -> void
+  %auto render() -> void
   %{
     $|Hope that helps, dear ${child.getName()}!$|
   %}

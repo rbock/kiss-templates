@@ -9,24 +9,24 @@ namespace kiste
   {
     std::ostream& _os;
 
-		raw(std::ostream& os):
-			_os(os)
-		{}
+    raw(std::ostream& os):
+      _os(os)
+    {}
 
-		raw() = delete;
-		raw(const raw&) = default;
-		raw(raw&&) = default;
-		raw& operator=(const raw&) = default;
-		raw& operator=(raw&&) = default;
-		~raw() = default;
+    raw() = delete;
+    raw(const raw&) = default;
+    raw(raw&&) = default;
+    raw& operator=(const raw&) = default;
+    raw& operator=(raw&&) = default;
+    ~raw() = default;
 
-		auto get_ostream() -> std::ostream&
-		{
-			return _os;
-		}
+    auto get_ostream() -> std::ostream&
+    {
+      return _os;
+    }
 
     template <typename T>
-    auto operator()(T&& t) const -> void
+    auto operator()(T&& t) -> void
     {
       _os << std::forward<T>(t);
     }

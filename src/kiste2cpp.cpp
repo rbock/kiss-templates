@@ -39,11 +39,12 @@ namespace
     bool trailing_return = true;
     bool stream_opened = false;
     bool string_opened = false;
+    bool report_exceptions = false;
     LineType previous_line_type = LineType::None;
     std::string class_name;
     std::string parent_class_name;
 
-    parse_context(std::istream& is_, std::ostream& os_, const std::string& filename_) : is(is_), os(os_), filename{filename_}
+    parse_context(std::istream& is_, std::ostream& os_, const std::string& filename_, bool report_exceptions_) : is(is_), os(os_), filename{filename_}, report_exceptions{report_exceptions_}
     {
     }
 
@@ -64,7 +65,6 @@ namespace
 
     void write_char(char c)
     {
-      open_string();
       switch (c)
       {
       case '\\':
@@ -107,13 +107,34 @@ namespace
 
     void open_text()
     {
-			if (previous_line_type == LineType::Text)
-				os << "\n";
+      if (previous_line_type == LineType::Text)
+        os << "\n";
       if (stream_opened)
       {
         os << "       ";
       }
       previous_line_type = LineType::Text;
+    }
+
+    void open_exception_handling()
+    {
+      if (report_exceptions)
+      {
+        os << " try {";
+      }
+    }
+    void close_exception_handling(const std::string& expression)
+    {
+      if (report_exceptions)
+      {
+        os << "} catch(...) {_serialize.report_exception(__LINE__, \"";
+        std::cerr << "Expression: " << expression << std::endl;
+        for (const auto& c : expression)
+        {
+          write_char(c);
+        }
+        os << "\", std::current_exception()); } ";
+      }
     }
   };
 
@@ -129,9 +150,9 @@ namespace
     }
   };
 
-	auto parse_expression(const parse_context& ctx, std::size_t& pos) -> std::string
-	{
-		auto expression = std::string{};
+  auto parse_expression(const parse_context& ctx, std::size_t& pos) -> std::string
+  {
+    auto expression = std::string{};
     auto arg_curly_level = 1;
 
     for (; pos < ctx.line.size() and arg_curly_level; ++pos)
@@ -146,7 +167,7 @@ namespace
         --arg_curly_level;
         if (arg_curly_level)
         {
-					expression.push_back(ctx.line.at(pos));
+          expression.push_back(ctx.line.at(pos));
         }
         else
         {
@@ -154,20 +175,21 @@ namespace
         }
         break;
       default:
-				expression.push_back(ctx.line.at(pos));
+        expression.push_back(ctx.line.at(pos));
       }
     }
-		if (arg_curly_level > 0)
-		{
-			throw parse_error(ctx, "missing closing brace");
-		}
-		--pos;
+    if (arg_curly_level > 0)
+    {
+      throw parse_error(ctx, "missing closing brace");
+    }
+    --pos;
 
     return expression;
   }
 
   auto parse_arg(parse_context& ctx, std::size_t pos) -> std::size_t
   {
+    ctx.open_string();
 
     // std::clog << "----------------------------------" << std::endl;
     // std::clog << "line: " << ctx.line.substr(pos) << std::endl;
@@ -176,7 +198,7 @@ namespace
       ctx.write_char('$');
       return pos + 1;
     }
-		else if (ctx.line.at(pos) == '%')
+    else if (ctx.line.at(pos) == '%')
     {
       ctx.write_char('%');
       return pos + 1;
@@ -194,20 +216,28 @@ namespace
     {
       ctx.close_stream();
       pos += 1;
-      ctx.os << " _serialize(" << parse_expression(ctx, pos) << "); ";
+      ctx.open_exception_handling();
+      const auto expression = parse_expression(ctx, pos);
+      ctx.os << " _serialize(" << expression << "); ";
+      ctx.close_exception_handling(expression);
     }
     else if (ctx.line.substr(pos, 4) == "raw{")
     {
       ctx.close_stream();
       pos += 4;
-      ctx.os << " _os << (" << parse_expression(ctx, pos) << "); ";
+      ctx.open_exception_handling();
+      const auto expression = parse_expression(ctx, pos);
+      ctx.os << " _os << (" << expression << "); ";
+      ctx.close_exception_handling(expression);
     }
     else if (ctx.line.substr(pos, 5) == "call{")
     {
       ctx.close_stream();
       pos += 5;
-			const auto expression = parse_expression(ctx, pos);
+      ctx.open_exception_handling();
+      const auto expression = parse_expression(ctx, pos);
       ctx.os << " static_assert(std::is_same<decltype(" << expression << "), void>::value, \"$call{} requires void expression\"); (" << expression << "); ";
+      ctx.close_exception_handling(expression);
     }
     else
     {
@@ -215,8 +245,8 @@ namespace
     }
     // std::clog << "----------------------------------" << std::endl;
 
-		return pos;
-	}
+    return pos;
+  }
 
   auto parse_text_line(parse_context& ctx) -> void
   {
@@ -230,6 +260,7 @@ namespace
     }
     for (std::size_t i = 0; i < ctx.line.size(); ++i)
     {
+      ctx.open_string();
       switch (ctx.line.at(i))
       {
       case '$':
@@ -250,9 +281,13 @@ namespace
   void write_header(parse_context& ctx)
   {
     ctx.os << "#pragma once\n";
+    if (ctx.report_exceptions)
+    {
+    ctx.os << "#include <exception>\n";
+    }
     ctx.os << "#include <kiste/terminal.h>\n";
     ctx.os << "\n";
-		ctx.os << "#line " << 1 << " \"" << ctx.filename << "\"\n";
+    ctx.os << "#line " << 1 << " \"" << ctx.filename << "\"\n";
   }
 
   void parse_parent_class(parse_context& ctx, const std::string& line)
@@ -295,15 +330,15 @@ namespace
 
     const auto member_name = (nameEnd == line.npos) ? line.substr(nameBegin) : line.substr(nameBegin, nameEnd - nameBegin);
 
-		if (line.find_first_not_of(" \t", nameEnd) != line.npos)
-		{
-			throw parse_error(ctx, "unexpected characters after member declaration");
-		}
+    if (line.find_first_not_of(" \t", nameEnd) != line.npos)
+    {
+      throw parse_error(ctx, "unexpected characters after member declaration");
+    }
 
-		// The "using" is required for clang-3.1 and older g++ versions
-		const auto member_class_alias = member_class_name + "_t_alias";
-		ctx.os << "  using " + member_class_alias + " = " + member_class_name + "_t<" + ctx.class_name+ "_t, _data_t, _serializer_t>; " + member_class_alias + " " + member_name + " = " + member_class_alias + "{*this, data, _serialize};\n";
-	}
+    // The "using" is required for clang-3.1 and older g++ versions
+    const auto member_class_alias = member_class_name + "_t_alias";
+    ctx.os << "  using " + member_class_alias + " = " + member_class_name + "_t<" + ctx.class_name+ "_t, _data_t, _serializer_t>; " + member_class_alias + " " + member_name + " = " + member_class_alias + "{*this, data, _serialize};\n";
+  }
 
   void parse_class(parse_context& ctx, const std::string& line)
   {
@@ -334,18 +369,18 @@ namespace
     if (not ctx.parent_class_name.empty())
     {
       ctx.os << "  using _parent_t = " + ctx.parent_class_name + "_t<" + ctx.class_name + "_t, DATA_T, SERIALIZER_T>;\n";
-      ctx.os << "  const _parent_t& parent;\n";
+      ctx.os << "  _parent_t& parent;\n";
     }
-    ctx.os << "  const DERIVED_T& child;\n";
+    ctx.os << "  DERIVED_T& child;\n";
     ctx.os << "  using _data_t = DATA_T;\n";
     ctx.os << "  const _data_t& data;\n";
     ctx.os << "  std::ostream& _os;\n";
     ctx.os << "  using _serializer_t = SERIALIZER_T;\n";
-    ctx.os << "  _serializer_t _serialize;\n";
+    ctx.os << "  _serializer_t& _serialize;\n";
     ctx.os << "\n";
 
     // constructor
-    ctx.os << "  " + ctx.class_name + "_t(const DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):\n";
+    ctx.os << "  " + ctx.class_name + "_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):\n";
     if (not ctx.parent_class_name.empty())
     {
       ctx.os << "    _parent_t{*this, data_, serialize},\n";
@@ -358,7 +393,7 @@ namespace
     ctx.os << "  {}\n";
 
     ctx.os << "  // ----------------------------------------------------------------------\n";
-		ctx.os << "#line " << ctx.line_no + 1 << "\n";
+    ctx.os << "#line " << ctx.line_no + 1 << "\n";
   }
 
   void write_class_footer(const parse_context& ctx)
@@ -367,10 +402,10 @@ namespace
       throw parse_error(ctx, "No class to end here");
 
     ctx.os << "  // ----------------------------------------------------------------------\n";
-		ctx.os << "#line " << ctx.line_no << "\n";
+    ctx.os << "#line " << ctx.line_no << "\n";
     ctx.os << "};\n\n";
 
-		ctx.os << "#line " << ctx.line_no << "\n";
+    ctx.os << "#line " << ctx.line_no << "\n";
     ctx.os << "template<typename DATA_T, typename SERIALIZER_T>\n";
     ctx.os << "auto " + ctx.class_name + "(const DATA_T& data, SERIALIZER_T& serialize)\n";
     ctx.os << "  -> " + ctx.class_name + "_t<kiste::terminal_t, DATA_T, SERIALIZER_T>\n";
@@ -378,7 +413,7 @@ namespace
     ctx.os << "  return {kiste::terminal, data, serialize};\n";
     ctx.os << "}\n";
     ctx.os << "\n";
-		ctx.os << "#line " << ctx.line_no + 1 << "\n";
+    ctx.os << "#line " << ctx.line_no + 1 << "\n";
   }
 
   void write_footer(const parse_context& ctx)
@@ -492,13 +527,16 @@ auto usage(std::string reason = "") -> int
   if (not reason.empty())
     std::cerr << "ERROR: " << reason << std::endl;
 
-  std::cerr << "Usage: kiste2cpp [--output OUTPUT_HEADER_FILENAME] SOURCE_FILENAME" << std::endl;
+  std::cerr << "Usage: kiste2cpp [--output OUTPUT_HEADER_FILENAME] [--report_exceptions] SOURCE_FILENAME" << std::endl;
   return 1;
 }
 
 auto main(int argc, char** argv) -> int
 {
-  std::string source_file_path, output_file_path;
+  auto source_file_path = std::string{};
+  auto output_file_path = std::string{};
+  auto report_exceptions = false;
+
 
   for (int i = 1; i < argc; ++i)
   {
@@ -513,6 +551,10 @@ auto main(int argc, char** argv) -> int
       {
         return usage("No output file given, or given twice");
       }
+    }
+    else if (std::string{argv[i]} == "--report-exceptions")
+    {
+      report_exceptions = true;
     }
     else if (source_file_path.empty())
     {
@@ -548,7 +590,7 @@ auto main(int argc, char** argv) -> int
     os = &ofs;
   }
 
-  auto ctx = parse_context{ifs, *os, source_file_path};
+  auto ctx = parse_context{ifs, *os, source_file_path, report_exceptions};
 
   try
   {

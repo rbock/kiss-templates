@@ -9,10 +9,10 @@ struct Data
 
 int main()
 {
-	const auto data = Data{};
-	auto& os = std::cout;
-	auto serializer = kiste::raw{os};
-	auto sample = test::GrandChild(data, serializer);
+  const auto data = Data{};
+  auto& os = std::cout;
+  auto serializer = kiste::raw{os};
+  auto sample = test::GrandChild(data, serializer);
 
-	sample.render();
+  sample.render();
 }

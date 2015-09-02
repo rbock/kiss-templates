@@ -7,14 +7,14 @@ namespace comparison_based_test
 template<typename DERIVED_T, typename DATA_T, typename SERIALIZER_T>
 struct HelloWorld_t
 {
-  const DERIVED_T& child;
+  DERIVED_T& child;
   using _data_t = DATA_T;
   const _data_t& data;
   std::ostream& _os;
   using _serializer_t = SERIALIZER_T;
-  _serializer_t _serialize;
+  _serializer_t& _serialize;
 
-  HelloWorld_t(const DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):
+  HelloWorld_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):
     child(derived),
     data(data_),
     _os(serialize.get_ostream()),
@@ -23,7 +23,7 @@ struct HelloWorld_t
   // ----------------------------------------------------------------------
 #line 4
 
-  auto render() const -> void
+  auto render() -> void
   {
       _os << "    Hello, world!\n";
   }

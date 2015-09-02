@@ -4,7 +4,7 @@
 %{
   $class Sample
 
-  %auto render() const -> void
+  %auto render() -> void
   %{
     We print this at ${std::time(nullptr)}:
     <ul>
