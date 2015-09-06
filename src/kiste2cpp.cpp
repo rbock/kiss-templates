@@ -196,12 +196,12 @@ namespace
     if (ctx.line.at(pos) == '$')
     {
       ctx.write_char('$');
-      return pos + 1;
+      return pos;
     }
     else if (ctx.line.at(pos) == '%')
     {
       ctx.write_char('%');
-      return pos + 1;
+      return pos;
     }
     else if (ctx.line.at(pos) == '|')
     {
@@ -210,7 +210,7 @@ namespace
       {
         throw parse_error(ctx, "Trailing characters after trim-right ($|)");
       }
-      return pos + 1;
+      return pos;
     }
     else if (ctx.line.at(pos) == '{')
     {

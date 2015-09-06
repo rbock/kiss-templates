@@ -5,6 +5,12 @@
   %auto render() -> void
   %{
     Hello, world!
+
+		A$$B
+		$%AB
+		$|AB
+		AB$|
+		$|AB$|
   %}
 
   $endclass
