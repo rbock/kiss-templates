@@ -5,7 +5,7 @@ add_dependencies(calling_non_void calling_non_void_templates)
 target_link_libraries(calling_non_void PRIVATE kiste)
 
 add_test(NAME calling_non_void_test
-	COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target calling_non_void
-	)
+  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target calling_non_void
+  )
 set_property(TEST calling_non_void_test PROPERTY PASS_REGULAR_EXPRESSION "call{} requires void expression")
 

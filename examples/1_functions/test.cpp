@@ -4,15 +4,15 @@
 
 struct Data
 {
-	double foo;
+  double foo;
 };
 
 int main()
 {
-	const auto data = Data{3.1415};
-	auto& os = std::cout;
-	auto serializer = kiste::raw{os};
-	auto sample = test::Sample(data, serializer);
+  const auto data = Data{3.1415};
+  auto& os = std::cout;
+  auto serializer = kiste::raw{os};
+  auto sample = test::Sample(data, serializer);
 
-	sample.render();
+  sample.render();
 }

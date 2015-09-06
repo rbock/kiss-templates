@@ -2,7 +2,7 @@
 %{
   $class Hello
 
-  %auto render() const -> void
+  %auto render() -> void
   %{
     Hello ${data.name}!
   %}

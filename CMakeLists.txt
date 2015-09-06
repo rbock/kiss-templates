@@ -24,6 +24,7 @@
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 project(kiste VERSION 0.1 LANGUAGES CXX)
+include(CMakeParseArguments)
 
 enable_testing()
 
@@ -35,30 +36,46 @@ target_include_directories(kiste INTERFACE
 
 if (UNIX AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.4)
 target_compile_features(kiste INTERFACE
-	cxx_auto_type
-	cxx_constexpr
-	cxx_decltype
-	cxx_defaulted_functions
-	cxx_defaulted_move_initializers
-	cxx_deleted_functions
-	cxx_explicit_conversions
-	cxx_lambdas
-	cxx_noexcept
-	cxx_nullptr
-	cxx_range_for
-	cxx_right_angle_brackets
-	cxx_rvalue_references
-	cxx_static_assert
-	cxx_trailing_return_types
-	cxx_uniform_initialization
-	cxx_template_template_parameters
+  cxx_auto_type
+  cxx_constexpr
+  cxx_decltype
+  cxx_defaulted_functions
+  cxx_defaulted_move_initializers
+  cxx_deleted_functions
+  cxx_explicit_conversions
+  cxx_lambdas
+  cxx_noexcept
+  cxx_nullptr
+  cxx_range_for
+  cxx_right_angle_brackets
+  cxx_rvalue_references
+  cxx_static_assert
+  cxx_trailing_return_types
+  cxx_uniform_initialization
+  cxx_template_template_parameters
   cxx_variadic_templates
   )
+else()
+  include(CheckCXXCompilerFlag)
+  CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+  if(COMPILER_SUPPORTS_CXX11)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  endif()
 endif ()
 
 function(add_kiss_templates KISTE_NAME)
+  set(options REPORT_EXCEPTIONS)
+  set(oneValueArgs "")
+  set(multiValueArgs "")
+  cmake_parse_arguments(KISTE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  set(report_transactions "")
+  if (KISTE_REPORT_EXCEPTIONS)
+    set(report_transactions "--report-exceptions")
+  endif()
+
   set(templates "")
-  foreach(kiste ${ARGN})
+  foreach(kiste ${KISTE_UNPARSED_ARGUMENTS})
     get_filename_component(source ${kiste} ABSOLUTE)
     get_filename_component(basename ${kiste} NAME_WE)
 
@@ -67,7 +84,7 @@ function(add_kiss_templates KISTE_NAME)
     set(templates ${templates} ${dest})
     add_custom_command(
       OUTPUT ${dest}
-      COMMAND $<TARGET_FILE:kiste2cpp> ${source} > ${dest}
+      COMMAND $<TARGET_FILE:kiste2cpp> ${report_transactions} ${source} > ${dest}
       DEPENDS ${source} kiste2cpp
       )
   endforeach()

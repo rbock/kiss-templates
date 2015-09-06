@@ -4,7 +4,7 @@
 
   %auto render() -> void
   %{
-    Hello, world!
+    Hello, ${"any expression"}!
   %}
 
   $endclass
