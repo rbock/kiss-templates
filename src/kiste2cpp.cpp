@@ -527,7 +527,7 @@ auto usage(std::string reason = "") -> int
   if (not reason.empty())
     std::cerr << "ERROR: " << reason << std::endl;
 
-  std::cerr << "Usage: kiste2cpp [--output OUTPUT_HEADER_FILENAME] [--report_exceptions] SOURCE_FILENAME" << std::endl;
+  std::cerr << "Usage: kiste2cpp [--output OUTPUT_HEADER_FILENAME] [--report-exceptions] SOURCE_FILENAME" << std::endl;
   return 1;
 }
 
