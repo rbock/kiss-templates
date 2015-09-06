@@ -1,0 +1,11 @@
+%namespace comparison_based_test
+%{
+  $class HelloWorld
+
+  %auto render() -> void
+  %{
+    Hello, ${"any expression"}!
+  %}
+
+  $endclass
+%}
