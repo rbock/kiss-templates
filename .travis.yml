@@ -1,0 +1,45 @@
+# As soon as Travis updates their systems, we can use container-based approach. Until then, install CMake 3.x and new
+# version of GCC manually
+#sudo: false
+#addons:
+#  apt:
+#    packages:
+#    - cmake
+
+sudo: true
+
+language: cpp
+
+compiler:
+  - clang
+  - gcc
+
+before_install:
+  - 'sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test'
+  - 'sudo apt-get remove -y gcc g++' # disable alternatives
+  - 'sudo apt-get update'
+  - 'sudo apt-get install -y gcc-4.8 g++-4.8'
+  - 'sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20'
+  - 'sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20'
+  - 'g++ --version'
+
+  - 'pushd /tmp'
+  - 'mkdir cmake3build'
+  - 'cd cmake3build'
+  - 'wget http://www.cmake.org/files/v3.3/cmake-3.3.1.tar.gz'
+  - 'tar xf cmake-3.3.1.tar.gz'
+  - 'cd cmake-3.3.1'
+  - './configure'
+  - 'make'
+  - 'sudo make install'
+  - 'popd'
+
+before_script:
+  - 'mkdir .build'
+  - 'cd .build'
+  - 'cmake --version'
+  - 'cmake -G "Unix Makefiles" ..'
+
+script:
+  - make
+  - make test
