@@ -17,7 +17,12 @@ compiler:
   - clang
   - gcc
 
-before_install:
+notifications:
+ email:
+   on_success: change
+   on_failure: always
+
+install:
   - CMAKE_VERSION_MM=3.2
   - CMAKE_VERSION_FULL=$CMAKE_VERSION_MM.2
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then
