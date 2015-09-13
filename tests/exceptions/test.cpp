@@ -14,9 +14,9 @@ struct Serializer : public kiste::raw
   bool caughtString = false;
   bool caughtException = false;
 
-  Serializer(std::ostream& os):
-    kiste::raw(os)
-  {}
+  Serializer(std::ostream& os) : kiste::raw(os)
+  {
+  }
 
   void report_exception(long lineNo, const std::string& expression, std::exception_ptr e)
   {

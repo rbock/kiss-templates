@@ -16,12 +16,9 @@ struct Data
   std::string backgroundColor = "#ddd";
   std::string formUrl = "https://www.test.com/?kiste=easy&cheesecake=yammi";
   std::string formTarget = "somewhere";
-  std::vector<Parameter> params =
-  {
-    Parameter{"HIDDEN", "SECRET", "Shhhh!"},
-    Parameter{"TEXT", "name", ""},
-    Parameter{"SUBMIT", "submit", "Submit"}
-  };
+  std::vector<Parameter> params = {Parameter{"HIDDEN", "SECRET", "Shhhh!"},
+                                   Parameter{"TEXT", "name", ""},
+                                   Parameter{"SUBMIT", "submit", "Submit"}};
 };
 
 int main()

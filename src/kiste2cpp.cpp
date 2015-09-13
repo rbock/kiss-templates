@@ -44,7 +44,11 @@ namespace
     std::string class_name;
     std::string parent_class_name;
 
-    parse_context(std::istream& is_, std::ostream& os_, const std::string& filename_, bool report_exceptions_) : is(is_), os(os_), filename{filename_}, report_exceptions{report_exceptions_}
+    parse_context(std::istream& is_,
+                  std::ostream& os_,
+                  const std::string& filename_,
+                  bool report_exceptions_)
+        : is(is_), os(os_), filename{filename_}, report_exceptions{report_exceptions_}
     {
     }
 
@@ -236,7 +240,8 @@ namespace
       pos += 5;
       ctx.open_exception_handling();
       const auto expression = parse_expression(ctx, pos);
-      ctx.os << " static_assert(std::is_same<decltype(" << expression << "), void>::value, \"$call{} requires void expression\"); (" << expression << "); ";
+      ctx.os << " static_assert(std::is_same<decltype(" << expression
+             << "), void>::value, \"$call{} requires void expression\"); (" << expression << "); ";
       ctx.close_exception_handling(expression);
     }
     else
@@ -283,7 +288,7 @@ namespace
     ctx.os << "#pragma once\n";
     if (ctx.report_exceptions)
     {
-    ctx.os << "#include <exception>\n";
+      ctx.os << "#include <exception>\n";
     }
     ctx.os << "#include <kiste/terminal.h>\n";
     ctx.os << "\n";
@@ -301,7 +306,8 @@ namespace
     if (nameBegin == line.npos)
       throw parse_error(ctx, "Could not find parent class name");
     const auto nameEnd = line.find_first_of(" \t", nameBegin);
-    ctx.parent_class_name = (nameEnd == line.npos) ? line.substr(nameBegin) : line.substr(nameBegin, nameEnd - nameBegin);
+    ctx.parent_class_name = (nameEnd == line.npos) ? line.substr(nameBegin)
+                                                   : line.substr(nameBegin, nameEnd - nameBegin);
 
     if (nameEnd != line.npos)
     {
@@ -328,7 +334,8 @@ namespace
       throw parse_error(ctx, "Could not find member name");
     const auto nameEnd = line.find_first_of(" \t", nameBegin);
 
-    const auto member_name = (nameEnd == line.npos) ? line.substr(nameBegin) : line.substr(nameBegin, nameEnd - nameBegin);
+    const auto member_name = (nameEnd == line.npos) ? line.substr(nameBegin)
+                                                    : line.substr(nameBegin, nameEnd - nameBegin);
 
     if (line.find_first_not_of(" \t", nameEnd) != line.npos)
     {
@@ -337,7 +344,9 @@ namespace
 
     // The "using" is required for clang-3.1 and older g++ versions
     const auto member_class_alias = member_class_name + "_t_alias";
-    ctx.os << "  using " + member_class_alias + " = " + member_class_name + "_t<" + ctx.class_name+ "_t, _data_t, _serializer_t>; " + member_class_alias + " " + member_name + " = " + member_class_alias + "{*this, data, _serialize};\n";
+    ctx.os << "  using " + member_class_alias + " = " + member_class_name + "_t<" + ctx.class_name +
+                  "_t, _data_t, _serializer_t>; " + member_class_alias + " " + member_name + " = " +
+                  member_class_alias + "{*this, data, _serialize};\n";
   }
 
   void parse_class(parse_context& ctx, const std::string& line)
@@ -348,7 +357,8 @@ namespace
     if (nameBegin == line.npos)
       throw parse_error(ctx, "Could not find class name");
     const auto nameEnd = line.find_first_of(" \t", nameBegin);
-    ctx.class_name = (nameEnd == line.npos) ? line.substr(nameBegin) : line.substr(nameBegin, nameEnd - nameBegin);
+    ctx.class_name = (nameEnd == line.npos) ? line.substr(nameBegin)
+                                            : line.substr(nameBegin, nameEnd - nameBegin);
     ctx.class_curly_level = ctx.curly_level;
 
     if (nameEnd != line.npos)
@@ -360,7 +370,8 @@ namespace
     ctx.os << "struct " + ctx.class_name << "_t";
     if (not ctx.parent_class_name.empty())
     {
-      ctx.os << ": public " + ctx.parent_class_name + "_t<" + ctx.class_name + "_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>";
+      ctx.os << ": public " + ctx.parent_class_name + "_t<" + ctx.class_name +
+                    "_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>";
     }
     ctx.os << "\n";
     ctx.os << "{\n";
@@ -368,7 +379,8 @@ namespace
     // data members
     if (not ctx.parent_class_name.empty())
     {
-      ctx.os << "  using _parent_t = " + ctx.parent_class_name + "_t<" + ctx.class_name + "_t, DATA_T, SERIALIZER_T>;\n";
+      ctx.os << "  using _parent_t = " + ctx.parent_class_name + "_t<" + ctx.class_name +
+                    "_t, DATA_T, SERIALIZER_T>;\n";
       ctx.os << "  _parent_t& parent;\n";
     }
     ctx.os << "  DERIVED_T& child;\n";
@@ -380,7 +392,8 @@ namespace
     ctx.os << "\n";
 
     // constructor
-    ctx.os << "  " + ctx.class_name + "_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):\n";
+    ctx.os << "  " + ctx.class_name +
+                  "_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):\n";
     if (not ctx.parent_class_name.empty())
     {
       ctx.os << "    _parent_t{*this, data_, serialize},\n";
@@ -527,7 +540,9 @@ auto usage(std::string reason = "") -> int
   if (not reason.empty())
     std::cerr << "ERROR: " << reason << std::endl;
 
-  std::cerr << "Usage: kiste2cpp [--output OUTPUT_HEADER_FILENAME] [--report-exceptions] SOURCE_FILENAME" << std::endl;
+  std::cerr
+      << "Usage: kiste2cpp [--output OUTPUT_HEADER_FILENAME] [--report-exceptions] SOURCE_FILENAME"
+      << std::endl;
   return 1;
 }
 
@@ -537,14 +552,13 @@ auto main(int argc, char** argv) -> int
   auto output_file_path = std::string{};
   auto report_exceptions = false;
 
-
   for (int i = 1; i < argc; ++i)
   {
     if (std::string{argv[i]} == "--output")
     {
-      if (i+1 < argc and output_file_path.empty())
+      if (i + 1 < argc and output_file_path.empty())
       {
-        output_file_path = argv[i+1];
+        output_file_path = argv[i + 1];
         ++i;
       }
       else
@@ -607,4 +621,3 @@ auto main(int argc, char** argv) -> int
     return 1;
   }
 }
-
