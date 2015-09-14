@@ -17,7 +17,7 @@ Template are a mix of
 %{
   $class Hello
 
-  %auto render() const -> void
+  %auto render() -> void
   %{
     Hello ${data.name}!
   %}
@@ -50,7 +50,7 @@ int main()
 {
   const auto data = Data{"World"};
   auto& os = std::cout;
-  const auto serializer = kiste::raw{os};
+  auto serializer = kiste::raw{os};
   auto hello = test::Hello(data, serializer);
 
   hello.render();
@@ -141,7 +141,7 @@ If you want to call a function without serializing the result (e.g. because the 
 
 For example:
 ```
-%auto title() const -> void
+%auto title() -> void
 %{
    $| Hello ${data.name}! $|
 %}
