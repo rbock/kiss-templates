@@ -60,7 +60,7 @@ int main()
 ### Output:
 Compile and run:
 ```
-$ ./examples/0_hello_world/hello_world 
+$ ./examples/0_hello_world/hello_world
     Hello World!
 ```
 Yeah!
@@ -111,7 +111,7 @@ $class derived : base
 % // Some other stuff
 $endclass
 ```
-In the generated code, the parent will also be the base of the child. They are linked in such a way that 
+In the generated code, the parent will also be the base of the child. They are linked in such a way that
 
   - you can access the direct child via a `child` member variable in the parent
   - you can access anything inherited from parent, grandparent, etc via a `parent` member
@@ -135,7 +135,7 @@ $member Helper helper
 $endclass
 ```
 
-In the generated code, the member template will also be a member of the composite. They are linked in such a way that 
+In the generated code, the member template will also be a member of the composite. They are linked in such a way that
 
   - you can access the member via its name in the composite
   - you can access the composite as `child` from the member template
@@ -175,7 +175,7 @@ For example:
 This will get rid of the leading spaces and the trailing return, yielding something like
 
 ```
- Hello Mr. Wolf! 
+ Hello Mr. Wolf!
 ```
 
 ### Escape sequences:
@@ -186,10 +186,15 @@ This will get rid of the leading spaces and the trailing return, yielding someth
 Text is everything else, as long as it is inside a function of a template class.
 
 ## Serializer classes:
-The interface of a serializer has to have 
+The interface of a serializer has to have
 
-  - `auto get_ostream() -> std::ostream&;` This function is called by the kiss templates to obtain the stream to which they send their texts.
-  - `auto operator()(...) -> void;` This operator is called with expressions from `${whatever}`. Make it accept whatever you need and like.
+  - `auto text(const char*) -> void;` This function is called by the kiss templates to serialize their texts.
+  - `auto escape(...) -> void;` This function is called with expressions from `${whatever}`. Make it accept whatever you need and like.
+
+Optionally, the serializer might offer
+
+  - `auto raw(...) -> void;` This function is called with expressions from `$raw{whatever}`. Make it accept whatever you need and like.
+  - `auto report_exception(long lineNo, const std::string& expression, std::exception_ptr e);` This function gets called if kiste2cpp is called with --report-exceptions. Handle reported exceptions here in any way you seem fit.
 
 ## Further education
 This is pretty much it.
