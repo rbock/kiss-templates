@@ -5,28 +5,29 @@
 
 namespace kiste
 {
-  struct raw
+  class raw
   {
     std::ostream& _os;
 
-    raw(std::ostream& os):
-      _os(os)
-    {}
+  public:
+    raw(std::ostream& os) : _os(os)
+    {
+    }
 
     raw() = delete;
-    raw(const raw&) = default;
+    raw(const raw&) = delete;
     raw(raw&&) = default;
-    raw& operator=(const raw&) = default;
+    raw& operator=(const raw&) = delete;
     raw& operator=(raw&&) = default;
     ~raw() = default;
 
-    auto get_ostream() -> std::ostream&
+    auto text(const char* t) -> void
     {
-      return _os;
+      _os << t;
     }
 
     template <typename T>
-    auto operator()(T&& t) -> void
+    auto escape(T&& t) -> void
     {
       _os << std::forward<T>(t);
     }

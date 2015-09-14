@@ -56,7 +56,7 @@ namespace
     {
       if (not stream_opened)
       {
-        os << "_os << ";
+        os << "_serialize.text(";
         stream_opened = true;
       }
 
@@ -94,7 +94,7 @@ namespace
       close_string();
       if (stream_opened)
       {
-        os << ";";
+        os << ");";
         stream_opened = false;
       }
     }
@@ -222,7 +222,7 @@ namespace
       pos += 1;
       ctx.open_exception_handling();
       const auto expression = parse_expression(ctx, pos);
-      ctx.os << " _serialize(" << expression << "); ";
+      ctx.os << " _serialize.escape(" << expression << "); ";
       ctx.close_exception_handling(expression);
     }
     else if (ctx.line.substr(pos, 4) == "raw{")
@@ -231,7 +231,7 @@ namespace
       pos += 4;
       ctx.open_exception_handling();
       const auto expression = parse_expression(ctx, pos);
-      ctx.os << " _os << (" << expression << "); ";
+      ctx.os << " _serialize.raw(" << expression << "); ";
       ctx.close_exception_handling(expression);
     }
     else if (ctx.line.substr(pos, 5) == "call{")
@@ -386,7 +386,6 @@ namespace
     ctx.os << "  DERIVED_T& child;\n";
     ctx.os << "  using _data_t = DATA_T;\n";
     ctx.os << "  const _data_t& data;\n";
-    ctx.os << "  std::ostream& _os;\n";
     ctx.os << "  using _serializer_t = SERIALIZER_T;\n";
     ctx.os << "  _serializer_t& _serialize;\n";
     ctx.os << "\n";
@@ -401,7 +400,6 @@ namespace
     }
     ctx.os << "    child(derived),\n";
     ctx.os << "    data(data_),\n";
-    ctx.os << "    _os(serialize.get_ostream()),\n";
     ctx.os << "    _serialize(serialize)\n";
     ctx.os << "  {}\n";
 
