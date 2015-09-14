@@ -69,6 +69,7 @@ Yeah!
   - `%<whatever>` C++ code
   - `$class <name>` starts a template class
   - `$class <name> : <base>` starts a template class, which inherits from a base class
+  - `member <class> <name>` adds a template as a member
   - `$endclass` ends a template class
   - `${<expression>}` send expression to serializer (which takes care of encoding, quoting, escaping, etc)
   - `$raw{<expression>}` send expression to the ostream directly (no escaping)
@@ -114,6 +115,31 @@ In the generated code, the parent will also be the base of the child. They are l
 
   - you can access the direct child via a `child` member variable in the parent
   - you can access anything inherited from parent, grandparent, etc via a `parent` member
+
+### Member templates
+If you want to reuse some template elements or just want to organize your templates into smaller units and use composition.
+
+A helper class
+```
+$class Helper
+% // Some stuff
+$endclass
+```
+
+And this is a composite class
+```
+%#include <Helper.h>
+$class composite
+$member Helper helper
+% // Some other stuff
+$endclass
+```
+
+In the generated code, the member template will also be a member of the composite. They are linked in such a way that 
+
+  - you can access the member via its name in the composite
+  - you can access the composite as `child` from the member template
+
 
 ### Serializing data
 As you saw in the initial example, the generated template code is initialized with data and a serializer. You can serialize members of that data or in fact any C++ expression by enclosing it in `${}`. For instance
