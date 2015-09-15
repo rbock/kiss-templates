@@ -93,8 +93,8 @@ function(add_kiss_templates KISTE_NAME)
 endfunction()
 
 add_subdirectory(src)
-add_subdirectory(examples)
-add_subdirectory(tests)
+#add_subdirectory(examples)
+#add_subdirectory(tests)
 
 #install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/kiste" DESTINATION include)
 
