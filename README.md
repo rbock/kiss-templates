@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/rbock/kiss-templates.svg?branch=develop)](https://travis-ci.org/rbock/kiss-templates) (develop)
-
 # kiss-templates
 Type safe _"Keep it simple, stupid"_ text templates for C++. If you are familiar with the idea of text templates and with C++, you can learn how to use it in just a few minutes.
 
