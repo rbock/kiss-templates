@@ -133,7 +133,7 @@ namespace
       if (report_exceptions)
       {
         os << "} catch(...) {_serialize.report_exception(__LINE__, \"";
-        std::cerr << "Expression: " << expression << std::endl;
+        // std::cerr << "Expression: " << expression << std::endl;
         for (const auto& c : expression)
         {
           write_char(c);
