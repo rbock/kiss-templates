@@ -2,14 +2,22 @@
 #include <iostream>
 #include <string>
 
+namespace
+{
+  struct MyException
+  {
+    std::string line;
+  };
+}
+
 auto main() -> int
 {
   try
   {
   }
-  catch (const std::string& e)
+  catch (const MyException& e)
   {
-    std::cerr << e << std::endl;
+    std::cerr << e.line << std::endl;
     return 1;
   }
 }
