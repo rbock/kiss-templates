@@ -1,0 +1,25 @@
+os: Visual Studio 2015 CTP
+
+platform:
+  - x64
+
+configuration:
+  - Debug
+  - Release
+
+matrix:
+  fast_finish: true
+
+#install:
+#  - C:\"Program Files (x86)"\"Microsoft Visual Studio 14.0"\VC\vcvarsall.bat
+
+build_script:
+  - echo %configuration%
+  - mkdir build
+  - pushd .
+  - cd build
+  - cmake --version
+  - cmake ..
+  - cmake --build . --config %configuration%
+  - ctest . --build-config %configuration%
+

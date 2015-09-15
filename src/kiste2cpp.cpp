@@ -1,8 +1,10 @@
+#include <ciso646>  // Make MSCV understand and/or/not
 #include <cstring>
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <string>
 
 namespace
 {
@@ -132,7 +134,6 @@ namespace
       if (report_exceptions)
       {
         os << "} catch(...) {_serialize.report_exception(__LINE__, \"";
-        std::cerr << "Expression: " << expression << std::endl;
         for (const auto& c : expression)
         {
           write_char(c);
@@ -259,7 +260,7 @@ namespace
     if (ctx.curly_level <= ctx.class_curly_level)
       throw parse_error(ctx, "Unexpected text outside of function");
     ctx.os << "  ";
-    for (int i = 0; i < ctx.curly_level; ++i)
+    for (std::size_t i = 0; i < ctx.curly_level; ++i)
     {
       ctx.os << "  ";
     }
