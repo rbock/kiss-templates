@@ -1,22 +1,15 @@
 //#include <ciso646>  // Make MSCV understand and/or/not
 #include <iostream>
+#include <string>
 
-namespace
-{
-  struct parse_error
-  {
-    std::string line;
-  };
-}
-
-auto main(int argc, char** argv) -> int
+auto main() -> int
 {
   try
   {
   }
-  catch (const parse_error& e)
+  catch (const std::string& e)
   {
-    std::cerr << "Line: " << e.line << std::endl;
+    std::cerr << e << std::endl;
     return 1;
   }
 }
