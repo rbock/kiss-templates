@@ -222,7 +222,7 @@ namespace
       ctx.close_stream();
       pos += 1;
       ctx.open_exception_handling();
-      const auto expression = parse_expression(ctx, pos);
+      auto expression = parse_expression(ctx, pos);
       ctx.os << " _serialize.escape(" << expression << "); ";
       ctx.close_exception_handling(expression);
     }
