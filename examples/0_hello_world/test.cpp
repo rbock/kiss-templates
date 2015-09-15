@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <hello_world.h>
 #include <kiste/raw.h>
 
