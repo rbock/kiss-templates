@@ -1,3 +1,4 @@
+%#include <string>
 %#include <helper.h>
 
 %namespace test

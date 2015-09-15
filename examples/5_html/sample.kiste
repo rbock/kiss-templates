@@ -1,3 +1,5 @@
+%#include <string>
+
 %namespace test
 %{
   $class Sample
