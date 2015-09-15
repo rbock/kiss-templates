@@ -1,3 +1,4 @@
+#include <ciso646>  // Make MSCV understand and/or/not
 #include <cstring>
 #include <stdexcept>
 #include <iostream>

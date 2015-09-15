@@ -1,3 +1,4 @@
+#include <ciso646>  // Make MSCV understand and/or/not
 #include <iostream>
 #include <sample.h>
 #include <kiste/html.h>
