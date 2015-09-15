@@ -5,13 +5,14 @@
 
 namespace kiste
 {
-  struct html
+  class html
   {
     std::ostream& _os;
 
-    html(std::ostream& os):
-      _os(os)
-    {}
+  public:
+    html(std::ostream& os) : _os(os)
+    {
+    }
 
     html() = delete;
     html(const html&) = default;
@@ -20,17 +21,17 @@ namespace kiste
     html& operator=(html&&) = default;
     ~html() = default;
 
-    auto get_ostream() -> std::ostream&
+    auto text(const char* text) -> void
     {
-      return _os;
+      _os << text;
     }
 
-    auto operator()(const char& c) -> void
+    auto escape(const char& c) -> void
     {
       switch (c)
       {
       case '<':
-        _os <<  "&lt;";
+        _os << "&lt;";
         break;
       case '>':
         _os << "&gt;";
@@ -50,24 +51,32 @@ namespace kiste
     }
 
     template <typename T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
-    auto operator()(const T& t) -> void
+    auto escape(const T& t) -> void
     {
       _os << t;
     }
 
-    template <typename T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr>
-    auto operator()(const T& t) -> void
+    template <typename T,
+              typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr>
+    auto escape(const T& t) -> void
     {
       _os << t;
     }
 
-    template <typename T, typename std::enable_if<std::is_convertible<T, std::string>::value>::type* = nullptr>
-    auto operator()(const T& t) -> void
+    template <typename T,
+              typename std::enable_if<std::is_convertible<T, std::string>::value>::type* = nullptr>
+    auto escape(const T& t) -> void
     {
-      for (const auto& c : std::string(t)) // maybe specialize for char* to avoid the constructor?
+      for (const auto& c : std::string(t))  // maybe specialize for char* to avoid the constructor?
       {
-        operator()(c);
+        escape(c);
       }
+    }
+
+    template <typename T>
+    auto raw(T&& t) -> void
+    {
+      _os << std::forward<T>(t);
     }
   };
 }

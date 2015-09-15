@@ -14,9 +14,9 @@ struct Serializer : public kiste::raw
   bool caughtString = false;
   bool caughtException = false;
 
-  Serializer(std::ostream& os):
-    kiste::raw(os)
-  {}
+  Serializer(std::ostream& os) : kiste::raw(os)
+  {
+  }
 
   void report_exception(long lineNo, const std::string& expression, std::exception_ptr e)
   {
@@ -26,24 +26,34 @@ struct Serializer : public kiste::raw
     }
     catch (const int& e)
     {
-      _os << "Caught an int '" << e << "'";
+      text("Caught an int '");
+      escape(e);
+      text("'");
       caughtInt = true;
     }
     catch (const std::string& e)
     {
-      _os << "Caught a std::string '" << e << "'";
+      text("Caught a std::string '");
+      escape(e);
+      text("'");
       caughtString = true;
     }
     catch (const std::exception& e)
     {
-      _os << "Caught a std::exception '" << e.what() << "'";
+      text("Caught a std::exception '");
+      escape(e.what());
+      text("'");
       caughtException = true;
     }
     catch (...)
     {
-      _os << "Caught an unknown exception";
+      text("Caught an unknown exception");
     }
-    _os << " at line " << lineNo << " in expression(" << expression << ")";
+    text(" at line ");
+    escape(lineNo);
+    text(" in expression(");
+    escape(expression);
+    text(")");
   }
 };
 

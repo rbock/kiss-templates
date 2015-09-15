@@ -10,14 +10,12 @@ struct HelloWorld_t
   DERIVED_T& child;
   using _data_t = DATA_T;
   const _data_t& data;
-  std::ostream& _os;
   using _serializer_t = SERIALIZER_T;
   _serializer_t& _serialize;
 
   HelloWorld_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):
     child(derived),
     data(data_),
-    _os(serialize.get_ostream()),
     _serialize(serialize)
   {}
   // ----------------------------------------------------------------------
@@ -25,13 +23,13 @@ struct HelloWorld_t
 
   auto render() -> void
   {
-      _os << "    Hello, world!\n"
+      _serialize.text("    Hello, world!\n"
              "\n"
              "		A$B\n"
              "		%AB\n"
              "AB\n"
              "		AB"
-             "AB";
+             "AB");
   }
 
   // ----------------------------------------------------------------------

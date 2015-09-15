@@ -1,5 +1,12 @@
+[![Build Status](https://travis-ci.org/rbock/kiss-templates.svg?branch=develop)](https://travis-ci.org/rbock/kiss-templates) (develop)
+
 # kiss-templates
 Type safe _"Keep it simple, stupid"_ text templates for C++. If you are familiar with the idea of text templates and with C++, you can learn how to use it in just a few minutes.
+
+Branch       | Build Status
+------------ | -------------
+Master       | [![Build Status](https://travis-ci.org/rbock/kiss-templates.svg?branch=master)](https://travis-ci.org/rbock/kiss-templates)
+Develop      | [![Build Status](https://travis-ci.org/rbock/kiss-templates.svg?branch=develop)](https://travis-ci.org/rbock/kiss-templates)
 
 ## How it works:
 Use kiste2cpp to turn text templates into type- and name-safe C++ code. Use this code to generate text from your data and the serializer of choice.
@@ -15,7 +22,7 @@ Template are a mix of
 %{
   $class Hello
 
-  %auto render() const -> void
+  %auto render() -> void
   %{
     Hello ${data.name}!
   %}
@@ -48,7 +55,7 @@ int main()
 {
   const auto data = Data{"World"};
   auto& os = std::cout;
-  const auto serializer = kiste::raw{os};
+  auto serializer = kiste::raw{os};
   auto hello = test::Hello(data, serializer);
 
   hello.render();
@@ -58,7 +65,7 @@ int main()
 ### Output:
 Compile and run:
 ```
-$ ./examples/0_hello_world/hello_world 
+$ ./examples/0_hello_world/hello_world
     Hello World!
 ```
 Yeah!
@@ -67,6 +74,7 @@ Yeah!
   - `%<whatever>` C++ code
   - `$class <name>` starts a template class
   - `$class <name> : <base>` starts a template class, which inherits from a base class
+  - `member <class> <name>` adds a template as a member
   - `$endclass` ends a template class
   - `${<expression>}` send expression to serializer (which takes care of encoding, quoting, escaping, etc)
   - `$raw{<expression>}` send expression to the ostream directly (no escaping)
@@ -108,10 +116,35 @@ $class derived : base
 % // Some other stuff
 $endclass
 ```
-In the generated code, the parent will also be the base of the child. They are linked in such a way that 
+In the generated code, the parent will also be the base of the child. They are linked in such a way that
 
   - you can access the direct child via a `child` member variable in the parent
   - you can access anything inherited from parent, grandparent, etc via a `parent` member
+
+### Member templates
+If you want to reuse some template elements or just want to organize your templates into smaller units and use composition.
+
+A helper class
+```
+$class Helper
+% // Some stuff
+$endclass
+```
+
+And this is a composite class
+```
+%#include <Helper.h>
+$class composite
+$member Helper helper
+% // Some other stuff
+$endclass
+```
+
+In the generated code, the member template will also be a member of the composite. They are linked in such a way that
+
+  - you can access the member via its name in the composite
+  - you can access the composite as `child` from the member template
+
 
 ### Serializing data
 As you saw in the initial example, the generated template code is initialized with data and a serializer. You can serialize members of that data or in fact any C++ expression by enclosing it in `${}`. For instance
@@ -139,7 +172,7 @@ If you want to call a function without serializing the result (e.g. because the 
 
 For example:
 ```
-%auto title() const -> void
+%auto title() -> void
 %{
    $| Hello ${data.name}! $|
 %}
@@ -147,7 +180,7 @@ For example:
 This will get rid of the leading spaces and the trailing return, yielding something like
 
 ```
- Hello Mr. Wolf! 
+ Hello Mr. Wolf!
 ```
 
 ### Escape sequences:
@@ -158,10 +191,15 @@ This will get rid of the leading spaces and the trailing return, yielding someth
 Text is everything else, as long as it is inside a function of a template class.
 
 ## Serializer classes:
-The interface of a serializer has to have 
+The interface of a serializer has to have
 
-  - `auto get_ostream() -> std::ostream&;` This function is called by the kiss templates to obtain the stream to which they send their texts.
-  - `auto operator()(...) -> void;` This operator is called with expressions from `${whatever}`. Make it accept whatever you need and like.
+  - `auto text(const char*) -> void;` This function is called by the kiss templates to serialize their texts.
+  - `auto escape(...) -> void;` This function is called with expressions from `${whatever}`. Make it accept whatever you need and like.
+
+Optionally, the serializer might offer
+
+  - `auto raw(...) -> void;` This function is called with expressions from `$raw{whatever}`. Make it accept whatever you need and like.
+  - `auto report_exception(long lineNo, const std::string& expression, std::exception_ptr e);` This function gets called if kiste2cpp is called with --report-exceptions. Handle reported exceptions here in any way you seem fit.
 
 ## Further education
 This is pretty much it.
