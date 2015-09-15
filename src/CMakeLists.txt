@@ -24,4 +24,5 @@
 
 add_executable(kiste2cpp kiste2cpp.cpp)
 target_link_libraries(kiste2cpp PRIVATE kiste)
+set_property(TARGET kiste2cpp PROPERTY CXX_STANDARD_REQUIRED 11)
 
