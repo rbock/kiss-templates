@@ -1,4 +1,4 @@
-//#include <ciso646>  // Make MSCV understand and/or/not
+#include <ciso646>  // Make MSCV understand and/or/not
 #include <iostream>
 #include <string>
 
