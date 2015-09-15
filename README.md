@@ -1,10 +1,13 @@
 # kiss-templates
 Type safe _"Keep it simple, stupid"_ text templates for C++. If you are familiar with the idea of text templates and with C++, you can learn how to use it in just a few minutes.
 
-Branch       | Build Status
+Branch       | Build Status          |  Build Status
+             | clang-3.4 / gcc-4.8   |  VS14 2015
 ------------ | -------------
-Master       | [![Build Status](https://travis-ci.org/rbock/kiss-templates.svg?branch=master)](https://travis-ci.org/rbock/kiss-templates)
-Develop      | [![Build Status](https://travis-ci.org/rbock/kiss-templates.svg?branch=develop)](https://travis-ci.org/rbock/kiss-templates)
+Master       | [![Build Status](https://travis-ci.org/rbock/kiss-templates.svg?branch=master)](https://travis-ci.org/rbock/kiss-templates) | [![Build status](https://ci.appveyor.com/api/projects/status/0vhmquucorgyx427/branch/master?svg=true)](https://ci.appveyor.com/project/rbock/kiss-templates/branch/master)
+
+
+Develop      | [![Build Status](https://travis-ci.org/rbock/kiss-templates.svg?branch=develop)](https://travis-ci.org/rbock/kiss-templates) | [![Build status](https://ci.appveyor.com/api/projects/status/0vhmquucorgyx427/branch/develop?svg=true)](https://ci.appveyor.com/project/rbock/kiss-templates/branch/develop)
 
 ## How it works:
 Use kiste2cpp to turn text templates into type- and name-safe C++ code. Use this code to generate text from your data and the serializer of choice.
