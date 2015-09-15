@@ -261,7 +261,7 @@ namespace
     if (ctx.curly_level <= ctx.class_curly_level)
       throw parse_error(ctx, "Unexpected text outside of function");
     ctx.os << "  ";
-    for (int i = 0; i < ctx.curly_level; ++i)
+    for (std::size_t i = 0; i < ctx.curly_level; ++i)
     {
       ctx.os << "  ";
     }

@@ -20,6 +20,6 @@ build_script:
   - cd build
   - cmake --version
   - cmake ..
-  - cmake --build .
-  - ctest . -C %configuration%
+  - cmake --build . --config %configuration%
+  - ctest . --build-config %configuration%
 
