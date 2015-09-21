@@ -72,7 +72,7 @@ Yeah!
   - `%<whatever>` C++ code
   - `$class <name>` starts a template class
   - `$class <name> : <base>` starts a template class, which inherits from a base class
-  - `member <class> <name>` adds a template as a member
+  - `$member <class> <name>` adds a template as a member
   - `$endclass` ends a template class
   - `${<expression>}` send expression to serializer (which takes care of encoding, quoting, escaping, etc)
   - `$raw{<expression>}` send expression to the ostream directly (no escaping)
