@@ -5,6 +5,8 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include "ClassTemplate.h"
+#include <kiste/cpp.h>
 
 namespace
 {
@@ -367,6 +369,11 @@ namespace
       parse_parent_class(ctx, line.substr(nameEnd));
     };
 
+#if !0
+    auto serializer = kiste::cpp(ctx.os);
+    auto classTemplate = kiste::ClassTemplate(ctx, serializer);
+    classTemplate.render_header();
+#else
     ctx.os << "template<typename DERIVED_T, typename DATA_T, typename SERIALIZER_T>\n";
     ctx.os << "struct " + ctx.class_name << "_t";
     if (not ctx.parent_class_name.empty())
@@ -406,6 +413,7 @@ namespace
 
     ctx.os << "  // ----------------------------------------------------------------------\n";
     ctx.os << "#line " << ctx.line_no + 1 << "\n";
+#endif
   }
 
   void write_class_footer(const parse_context& ctx)
@@ -413,6 +421,11 @@ namespace
     if (ctx.class_name.empty())
       throw parse_error(ctx, "No class to end here");
 
+#if !0
+    auto serializer = kiste::cpp(ctx.os);
+    auto classTemplate = ClassTemplate(ctx, serializer);
+    classTemplate.render_footer();
+#else
     ctx.os << "  // ----------------------------------------------------------------------\n";
     ctx.os << "#line " << ctx.line_no << "\n";
     ctx.os << "};\n\n";
@@ -426,6 +439,7 @@ namespace
     ctx.os << "}\n";
     ctx.os << "\n";
     ctx.os << "#line " << ctx.line_no + 1 << "\n";
+#endif
   }
 
   void write_footer(const parse_context& ctx)
