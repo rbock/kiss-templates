@@ -33,7 +33,7 @@
       $|    _serialize(serialize)
       $|  {}
       $|  // ----------------------------------------------------------------------
-      $|#line ${data.line_no}
+      $|#line ${data.line_no + 1}
     %}
 
     %void render_footer()
@@ -49,6 +49,8 @@
       $|{
       $|  return {kiste::terminal, data, serialize};
       $|}
+
+      $|#line ${data.line_no + 1}
     %}
 
   $endclass

@@ -65,7 +65,7 @@ namespace kiste
           "  {}\n"
           "  // ----------------------------------------------------------------------\n"
           "#line ");
-      _serialize.escape(data.line_no);
+      _serialize.escape(data.line_no + 1);
       _serialize.text("\n");
     }
 
@@ -90,14 +90,18 @@ namespace kiste
       _serialize.text("_t<kiste::terminal_t, DATA_T, SERIALIZER_T>\n"
                       "{\n"
                       "  return {kiste::terminal, data, serialize};\n"
-                      "}\n");
+                      "}\n"
+                      "\n"
+                      "#line ");
+      _serialize.escape(data.line_no + 1);
+      _serialize.text("\n");
     }
 
 // ----------------------------------------------------------------------
-#line 54
+#line 56
   };
 
-#line 54
+#line 56
   template <typename DATA_T, typename SERIALIZER_T>
   auto ClassTemplate(const DATA_T& data, SERIALIZER_T& serialize)
       -> ClassTemplate_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -105,5 +109,5 @@ namespace kiste
     return {kiste::terminal, data, serialize};
   }
 
-#line 55
+#line 57
 }
