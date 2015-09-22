@@ -55,8 +55,8 @@ namespace kiste
       _serialize.text("_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):\n");
       if (!data.parent_class_name.empty())
       {
-        _serialize.text("  _parent_t{*this, data_, serialize},\n"
-                        "  parent{*this},\n");
+        _serialize.text("    _parent_t{*this, data_, serialize},\n"
+                        "    parent(*this),\n");
       }
       _serialize.text(
           "    child(derived),\n"

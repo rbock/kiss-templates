@@ -369,7 +369,7 @@ namespace
       parse_parent_class(ctx, line.substr(nameEnd));
     };
 
-#if !0
+#if 00
     auto serializer = kiste::cpp(ctx.os);
     auto classTemplate = kiste::ClassTemplate(ctx, serializer);
     classTemplate.render_header();

@@ -25,8 +25,8 @@
       $|  ${data.class_name}_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):
       %if (!data.parent_class_name.empty())
       %{
-      $|  _parent_t{*this, data_, serialize},
-      $|  parent{*this},
+      $|    _parent_t{*this, data_, serialize},
+      $|    parent(*this),
       %}
       $|    child(derived),
       $|    data(data_),
