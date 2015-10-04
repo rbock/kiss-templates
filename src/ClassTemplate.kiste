@@ -1,0 +1,62 @@
+%namespace kiste
+%{
+  $class ClassTemplate
+
+    %void render_header()
+    %{
+      $|template<typename DERIVED_T, typename DATA_T, typename SERIALIZER_T>
+      $|struct ${data.class_name}_t
+      %if (!data.parent_class_name.empty())
+      %{
+      $|   : public ${data.parent_class_name}_t<${data.class_name}_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>
+      %}
+      $|{
+      %if (!data.parent_class_name.empty())
+      %{
+      $|  using _parent_t = ${data.parent_class_name}_t<${data.class_name}_t, DATA_T, SERIALIZER_T>;
+      $|  _parent_t& parent;
+      %}
+      $|  DERIVED_T& child;
+      $|  using _data_t = DATA_T;
+      $|  const _data_t& data;
+      $|  using _serializer_t = SERIALIZER_T;
+      $|  _serializer_t& _serialize;
+
+      $|  ${data.class_name}_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):
+      %if (!data.parent_class_name.empty())
+      %{
+      $|    _parent_t{*this, data_, serialize},
+      $|    parent(*this),
+      %}
+      $|    child(derived),
+      $|    data(data_),
+      $|    _serialize(serialize)
+      $|  {}
+      $|  // ----------------------------------------------------------------------
+      $|#line ${data.line_no + 1}
+    %}
+
+    %void render_footer()
+    %{
+      $|  // ----------------------------------------------------------------------
+      $|#line ${data.line_no}
+      $|};
+
+      $|#line ${data.line_no}
+      $|template<typename DATA_T, typename SERIALIZER_T>
+      $|auto ${data.class_name}(const DATA_T& data, SERIALIZER_T& serialize)
+      $|  -> ${data.class_name}_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
+      $|{
+      $|  return {kiste::terminal, data, serialize};
+      $|}
+
+      $|#line ${data.line_no + 1}
+    %}
+
+    %void render_cpp_line(const std::string& line)
+    %{
+      $|$raw{line}
+    %}
+
+  $endclass
+%}
