@@ -97,11 +97,18 @@ namespace kiste
       _serialize.text("\n");
     }
 
+    void render_cpp_line(const std::string& line)
+    {
+      _serialize.text("");
+      _serialize.raw(line);
+      _serialize.text("\n");
+    }
+
 // ----------------------------------------------------------------------
-#line 56
+#line 61
   };
 
-#line 56
+#line 61
   template <typename DATA_T, typename SERIALIZER_T>
   auto ClassTemplate(const DATA_T& data, SERIALIZER_T& serialize)
       -> ClassTemplate_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -109,5 +116,5 @@ namespace kiste
     return {kiste::terminal, data, serialize};
   }
 
-#line 57
+#line 62
 }

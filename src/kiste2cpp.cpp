@@ -369,51 +369,9 @@ namespace
       parse_parent_class(ctx, line.substr(nameEnd));
     };
 
-#if 00
     auto serializer = kiste::cpp(ctx.os);
     auto classTemplate = kiste::ClassTemplate(ctx, serializer);
     classTemplate.render_header();
-#else
-    ctx.os << "template<typename DERIVED_T, typename DATA_T, typename SERIALIZER_T>\n";
-    ctx.os << "struct " + ctx.class_name << "_t";
-    if (not ctx.parent_class_name.empty())
-    {
-      ctx.os << ": public " + ctx.parent_class_name + "_t<" + ctx.class_name +
-                    "_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>";
-    }
-    ctx.os << "\n";
-    ctx.os << "{\n";
-
-    // data members
-    if (not ctx.parent_class_name.empty())
-    {
-      ctx.os << "  using _parent_t = " + ctx.parent_class_name + "_t<" + ctx.class_name +
-                    "_t, DATA_T, SERIALIZER_T>;\n";
-      ctx.os << "  _parent_t& parent;\n";
-    }
-    ctx.os << "  DERIVED_T& child;\n";
-    ctx.os << "  using _data_t = DATA_T;\n";
-    ctx.os << "  const _data_t& data;\n";
-    ctx.os << "  using _serializer_t = SERIALIZER_T;\n";
-    ctx.os << "  _serializer_t& _serialize;\n";
-    ctx.os << "\n";
-
-    // constructor
-    ctx.os << "  " + ctx.class_name +
-                  "_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):\n";
-    if (not ctx.parent_class_name.empty())
-    {
-      ctx.os << "    _parent_t{*this, data_, serialize},\n";
-      ctx.os << "    parent(*this),\n";
-    }
-    ctx.os << "    child(derived),\n";
-    ctx.os << "    data(data_),\n";
-    ctx.os << "    _serialize(serialize)\n";
-    ctx.os << "  {}\n";
-
-    ctx.os << "  // ----------------------------------------------------------------------\n";
-    ctx.os << "#line " << ctx.line_no + 1 << "\n";
-#endif
   }
 
   void write_class_footer(const parse_context& ctx)
@@ -421,25 +379,9 @@ namespace
     if (ctx.class_name.empty())
       throw parse_error(ctx, "No class to end here");
 
-#if !0
     auto serializer = kiste::cpp(ctx.os);
     auto classTemplate = ClassTemplate(ctx, serializer);
     classTemplate.render_footer();
-#else
-    ctx.os << "  // ----------------------------------------------------------------------\n";
-    ctx.os << "#line " << ctx.line_no << "\n";
-    ctx.os << "};\n\n";
-
-    ctx.os << "#line " << ctx.line_no << "\n";
-    ctx.os << "template<typename DATA_T, typename SERIALIZER_T>\n";
-    ctx.os << "auto " + ctx.class_name + "(const DATA_T& data, SERIALIZER_T& serialize)\n";
-    ctx.os << "  -> " + ctx.class_name + "_t<kiste::terminal_t, DATA_T, SERIALIZER_T>\n";
-    ctx.os << "{\n";
-    ctx.os << "  return {kiste::terminal, data, serialize};\n";
-    ctx.os << "}\n";
-    ctx.os << "\n";
-    ctx.os << "#line " << ctx.line_no + 1 << "\n";
-#endif
   }
 
   void write_footer(const parse_context& ctx)
@@ -500,9 +442,13 @@ namespace
               break;
             }
           }
-          ctx.os << ctx.line.substr(0, pos_first_char);
-          ctx.os << ctx.line.substr(pos_first_char + 1) << '\n';
-          ctx.previous_line_type = LineType::Cpp;
+          {
+            auto serializer = kiste::cpp(ctx.os);
+            auto classTemplate = ClassTemplate(ctx, serializer);
+            classTemplate.render_cpp_line(ctx.line.substr(0, pos_first_char) +
+                                          ctx.line.substr(pos_first_char + 1));
+            ctx.previous_line_type = LineType::Cpp;
+          }
           break;
         case '$':  // opening / closing class or text line
         {

@@ -53,5 +53,10 @@
       $|#line ${data.line_no + 1}
     %}
 
+    %void render_cpp_line(const std::string& line)
+    %{
+      $|$raw{line}
+    %}
+
   $endclass
 %}
