@@ -93,6 +93,7 @@ function(add_kiss_templates KISTE_NAME)
 endfunction()
 
 add_subdirectory(src)
+add_subdirectory(include)
 add_subdirectory(examples)
 add_subdirectory(tests)
 
