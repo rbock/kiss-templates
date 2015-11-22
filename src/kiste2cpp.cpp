@@ -31,6 +31,13 @@ namespace
     Text
   };
 
+  struct class_data_t
+  {
+    std::size_t curly_level = 0;
+    std::string name;
+    std::string parent_name;
+  };
+
   struct parse_context
   {
     std::istream& is;
@@ -38,15 +45,13 @@ namespace
     std::string filename;
     std::string line;
     std::size_t line_no = 0;
-    std::size_t class_curly_level = 0;
     std::size_t curly_level = 0;
     bool trailing_return = true;
     bool stream_opened = false;
     bool string_opened = false;
     bool report_exceptions = false;
     LineType previous_line_type = LineType::None;
-    std::string class_name;
-    std::string parent_class_name;
+    class_data_t class_data;
 
     parse_context(std::istream& is_,
                   std::ostream& os_,
@@ -259,7 +264,7 @@ namespace
   auto parse_text_line(parse_context& ctx) -> void
   {
     ctx.open_text();
-    if (ctx.curly_level <= ctx.class_curly_level)
+    if (ctx.curly_level <= ctx.class_data.curly_level)
       throw parse_error(ctx, "Unexpected text outside of function");
     ctx.os << "  ";
     for (std::size_t i = 0; i < ctx.curly_level; ++i)
@@ -299,31 +304,40 @@ namespace
     ctx.os << "#line " << 1 << " \"" << ctx.filename << "\"\n";
   }
 
-  void parse_parent_class(parse_context& ctx, const std::string& line)
+  auto parse_parent_class(const parse_context& ctx, const std::string& line) -> std::string
   {
     const auto colonPos = line.find_first_not_of(" \t");
     if (colonPos == line.npos)
-      return;
+    {
+      return "";
+    }
     if (line[colonPos] != ':')
+    {
       throw parse_error(ctx, "Unexpected character after class name, did you forget a ':'?");
+    }
     const auto nameBegin = line.find_first_not_of(" \t", colonPos + 1);
     if (nameBegin == line.npos)
-      throw parse_error(ctx, "Could not find parent class name");
-    const auto nameEnd = line.find_first_of(" \t", nameBegin);
-    ctx.parent_class_name = (nameEnd == line.npos) ? line.substr(nameBegin)
-                                                   : line.substr(nameBegin, nameEnd - nameBegin);
-
-    if (nameEnd != line.npos)
     {
-      if (line.find_first_not_of(" \t", nameEnd) != line.npos)
-        throw parse_error(ctx, "Unexpected trailing characters after parent class name");
-    };
+      throw parse_error(ctx, "Could not find parent class name");
+    }
+    const auto nameEnd = line.find_first_of(" \t", nameBegin);
+    const auto parent_name = (nameEnd == line.npos) ? line.substr(nameBegin)
+                                                    : line.substr(nameBegin, nameEnd - nameBegin);
+
+    if (nameEnd != line.npos and line.find_first_not_of(" \t", nameEnd) != line.npos)
+    {
+      throw parse_error(ctx, "Unexpected trailing characters after parent class name");
+    }
+
+    return parent_name;
   }
 
   void parse_member(parse_context& ctx, const std::string& line)
   {
-    if (ctx.class_name.empty())
+    if (ctx.class_data.name.empty())
+    {
       throw parse_error(ctx, "Cannot add a member here, did you forget to call $class?");
+    }
     const auto classBegin = line.find_first_not_of(" \t", std::strlen("member"));
     if (classBegin == line.npos)
       throw parse_error(ctx, "Could not find member class name");
@@ -348,28 +362,35 @@ namespace
 
     // The "using" is required for clang-3.1 and older g++ versions
     const auto member_class_alias = member_class_name + "_t_alias";
-    ctx.os << "  using " + member_class_alias + " = " + member_class_name + "_t<" + ctx.class_name +
-                  "_t, _data_t, _serializer_t>; " + member_class_alias + " " + member_name + " = " +
-                  member_class_alias + "{*this, data, _serialize};\n";
+    ctx.os << "  using " + member_class_alias + " = " + member_class_name + "_t<" +
+                  ctx.class_data.name + "_t, _data_t, _serializer_t>; " + member_class_alias + " " +
+                  member_name + " = " + member_class_alias + "{*this, data, _serialize};\n";
   }
 
-  void parse_class(parse_context& ctx, const std::string& line)
+  auto parse_class(parse_context& ctx, const std::string& line) -> class_data_t
   {
-    if (not ctx.class_name.empty())
+    if (not ctx.class_data.name.empty())
       throw parse_error(ctx, "Cannot open new class here, did you forget to call $endclass?");
     const auto nameBegin = line.find_first_not_of(" \t", std::strlen("class"));
     if (nameBegin == line.npos)
       throw parse_error(ctx, "Could not find class name");
     const auto nameEnd = line.find_first_of(" \t", nameBegin);
-    ctx.class_name = (nameEnd == line.npos) ? line.substr(nameBegin)
-                                            : line.substr(nameBegin, nameEnd - nameBegin);
-    ctx.class_curly_level = ctx.curly_level;
+
+    auto cd = class_data_t{};
+    cd.name = (nameEnd == line.npos) ? line.substr(nameBegin)
+                                     : line.substr(nameBegin, nameEnd - nameBegin);
+    cd.curly_level = ctx.curly_level;
 
     if (nameEnd != line.npos)
     {
-      parse_parent_class(ctx, line.substr(nameEnd));
+      cd.parent_name = parse_parent_class(ctx, line.substr(nameEnd));
     };
 
+    return cd;
+  }
+
+  auto write_class_header(const parse_context& ctx) -> void
+  {
     auto serializer = kiste::cpp(ctx.os);
     auto classTemplate = kiste::ClassTemplate(ctx, serializer);
     classTemplate.render_header();
@@ -377,7 +398,7 @@ namespace
 
   void write_class_footer(const parse_context& ctx)
   {
-    if (ctx.class_name.empty())
+    if (ctx.class_data.name.empty())
       throw parse_error(ctx, "No class to end here");
 
     auto serializer = kiste::cpp(ctx.os);
@@ -387,7 +408,7 @@ namespace
 
   void write_footer(const parse_context& ctx)
   {
-    if (not ctx.class_name.empty())
+    if (not ctx.class_data.name.empty())
       throw parse_error(ctx, "class not ended at the end of the file, did you forget $endclass?");
 
     ctx.os << "\n";
@@ -404,7 +425,7 @@ namespace
       const auto pos_first_char = ctx.line.find_first_not_of(" \t");
       if (pos_first_char == ctx.line.npos)
       {
-        if (not ctx.class_name.empty() and ctx.curly_level > ctx.class_curly_level)
+        if (not ctx.class_data.name.empty() and ctx.curly_level > ctx.class_data.curly_level)
         {
           parse_text_line(ctx);
         }
@@ -456,13 +477,13 @@ namespace
           const auto rest = ctx.line.substr(pos_first_char + 1);
           if (starts_with(rest, "class"))
           {
-            parse_class(ctx, ctx.line.substr(pos_first_char + 1));
+            ctx.class_data = parse_class(ctx, rest);
+            write_class_header(ctx);
           }
           else if (starts_with(rest, "endclass"))
           {
             write_class_footer(ctx);
-            ctx.class_name.clear();
-            ctx.parent_class_name.clear();
+            ctx.class_data = {};
           }
           else if (starts_with(rest, "member"))
           {
