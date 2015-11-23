@@ -56,6 +56,15 @@ struct ClassTemplate_t
              "#line "); _serialize.escape(data.line_no + 1); _serialize.text("\n");
     }
 
+    template<typename Member>
+    void render_member(const Member& member)
+    {
+      // The "using" is required for clang-3.1 and older g++ versions
+      const auto class_alias = member.class_name + "_t_alias";
+      _serialize.text("using "); _serialize.escape(class_alias); _serialize.text(" = "); _serialize.escape(member.class_name); _serialize.text("_t<"); _serialize.escape(data.class_data.name); _serialize.text("_t, _data_t, _serializer_t>;"
+             ""); _serialize.escape(class_alias); _serialize.text(" "); _serialize.escape(member.name); _serialize.text(" = "); _serialize.escape(class_alias); _serialize.text("{*this, data, _serialize};\n");
+    }
+
     void render_footer()
     {
       _serialize.text("  // ----------------------------------------------------------------------\n"
@@ -73,16 +82,11 @@ struct ClassTemplate_t
              "#line "); _serialize.escape(data.line_no + 1); _serialize.text("\n");
     }
 
-    void render_cpp_line(const std::string& line)
-    {
-      _serialize.text(""); _serialize.raw(line); _serialize.text("\n");
-    }
-
   // ----------------------------------------------------------------------
-#line 61
+#line 65
 };
 
-#line 61
+#line 65
 template<typename DATA_T, typename SERIALIZER_T>
 auto ClassTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   -> ClassTemplate_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -90,7 +94,7 @@ auto ClassTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   return {kiste::terminal, data, serialize};
 }
 
-#line 62
+#line 66
 }
 
 

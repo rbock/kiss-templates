@@ -1,0 +1,113 @@
+%namespace kiste
+%{
+  $class LineTemplate
+
+    %void open_exception_handling()
+    %{
+      %if (data.report_exceptions)
+      %{
+        $|try$|
+        $|{$|
+      %}
+    %}
+
+    %void close_exception_handling(const std::string& expression)
+    %{
+      %if (data.report_exceptions)
+      %{
+        $|}$|
+        $|catch(...)$|
+        $|{$|
+        $|  _serialize.report_exception(__LINE__, "${expression}", std::current_exception());$|
+        $|}$|
+      %}
+    %}
+
+    %void escape(const std::string& expression)
+    %{
+      $call{open_exception_handling()}
+      $| _serialize.escape($raw{expression}); $|
+      $call{close_exception_handling(expression)}
+    %}
+
+    %void raw(const std::string& expression)
+    %{
+      $call{open_exception_handling()}
+      $| _serialize.raw($raw{expression}); $|
+      $call{close_exception_handling(expression)}
+    %}
+
+    %void call(const std::string& expression)
+    %{
+      $call{open_exception_handling()}
+      $| _serialize.call($raw{expression}); $|
+      $call{close_exception_handling(expression)}
+    %}
+
+    %void cpp_line(const std::string& line)
+    %{
+      $|$raw{line}$|
+    %}
+
+    %void open_string(bool& string_opened)
+    %{
+      %if (not string_opened)
+      %{
+        $|_serialize.text($|
+      %}
+      %string_opened = true;
+    %}
+
+    %void close_string(bool& string_opened)
+    %{
+      %if (string_opened)
+      %{
+        $|);$|
+      %}
+      %string_opened = false;
+    %}
+
+    %void text_segment(const std::string& line)
+    %{
+      $|"${line}"$|
+    %}
+
+    %template<typename Lines>
+    %void render_lines(const Lines& lines)
+    %{
+      %auto string_opened = false;
+      %for (const auto& line : lines)
+      %{
+        %auto trailing_return = true;
+        %for (const auto& command : line)
+        %{
+          %switch(command.type)
+          %{
+          %case command_type::cpp:
+            $call{close_string(string_opened)}
+            $call{cpp_line(command.text)}
+            %break;
+          %case command_type::text:
+            $call{open_string(string_opened)}
+            $call{text_segment(command.text)}
+            %break;
+          %case command_type::trim_trailing_return:
+            %trailing_return = false;
+            %break;
+          %case command_type::escape:
+            $call{close_string(string_opened)}
+            $call{escape(command.text)}
+            %break;
+    //ctx.open_text();
+    //ctx.os << "  ";
+    //for (std::size_t i = 0; i < ctx.curly_level; ++i)
+    //{
+      //ctx.os << "  ";
+    //}
+          %}
+        %}
+      %}
+    %}
+
+  $endclass
+%}

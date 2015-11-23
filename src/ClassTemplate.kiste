@@ -36,6 +36,15 @@
       $|#line ${data.line_no + 1}
     %}
 
+    %template<typename Member>
+    %void render_member(const Member& member)
+    %{
+      %// The "using" is required for clang-3.1 and older g++ versions
+      %const auto class_alias = member.class_name + "_t_alias";
+      $|using ${class_alias} = ${member.class_name}_t<${data.class_data.name}_t, _data_t, _serializer_t>;$|
+      $|${class_alias} ${member.name} = ${class_alias}{*this, data, _serialize};
+    %}
+
     %void render_footer()
     %{
       $|  // ----------------------------------------------------------------------
@@ -51,11 +60,6 @@
       $|}
 
       $|#line ${data.line_no + 1}
-    %}
-
-    %void render_cpp_line(const std::string& line)
-    %{
-      $|$raw{line}
     %}
 
   $endclass
