@@ -25,16 +25,16 @@
 
     %void escape(const std::string& expression)
     %{
-      $call{open_exception_handling()}
+      $|$call{open_exception_handling()}$|
       $| _serialize.escape($raw{expression}); $|
-      $call{close_exception_handling(expression)}
+      $|$call{close_exception_handling(expression)}$|
     %}
 
     %void raw(const std::string& expression)
     %{
-      $call{open_exception_handling()}
+      $|$call{open_exception_handling()}$|
       $| _serialize.raw($raw{expression}); $|
-      $call{close_exception_handling(expression)}
+      $|$call{close_exception_handling(expression)}$|
     %}
 
     %void call(const std::string& expression)
@@ -79,35 +79,44 @@
       %for (const auto& line : lines)
       %{
         %auto trailing_return = true;
-        %for (const auto& command : line)
-        %{
+        %for (const auto& command : line.commands)
+        %{/*
           %switch(command.type)
           %{
+          %case command_type::none:
+            %break;
           %case command_type::cpp:
-            $call{close_string(string_opened)}
-            $call{cpp_line(command.text)}
+            $|$call{close_string(string_opened)}$|
+            $|$call{cpp_line(command.text)}$|
             %break;
           %case command_type::text:
-            $call{open_string(string_opened)}
-            $call{text_segment(command.text)}
+            $|$call{open_string(string_opened)}$|
+            $|$call{text_segment(command.text)}$|
             %break;
           %case command_type::trim_trailing_return:
             %trailing_return = false;
             %break;
           %case command_type::escape:
-            $call{close_string(string_opened)}
-            $call{escape(command.text)}
+            $|$call{close_string(string_opened)}$|
+            $|$call{escape(command.text)}$|
             %break;
+          %}
+        %*/}
+
+      %}
+    %}
+
+% void old_code()
+% {
+      %/*
     //ctx.open_text();
     //ctx.os << "  ";
     //for (std::size_t i = 0; i < ctx.curly_level; ++i)
     //{
       //ctx.os << "  ";
     //}
-          %}
-        %}
-      %}
-    %}
+    %*/
 
+% }
   $endclass
 %}

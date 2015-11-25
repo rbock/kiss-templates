@@ -4,7 +4,6 @@ namespace kiste
 {
   enum class command_type
   {
-    none,
     cpp,
     text,
     trim_trailing_return,

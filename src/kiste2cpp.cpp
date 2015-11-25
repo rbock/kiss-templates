@@ -34,7 +34,16 @@ namespace kiste
     std::string text;
   };
 
-  static const auto empty_line = std::vector<command_t>{};
+  enum class line_type
+  {
+    none,
+    cpp,
+    text,
+    command,
+    class_begin,
+    class_end,
+    member,
+  };
 
   struct member_t
   {
@@ -49,6 +58,40 @@ namespace kiste
     std::string parent_name;
   };
 
+  struct line_t
+  {
+    std::size_t curly_level = 0;
+    std::size_t class_curly_level = 0;
+    line_type previous_type = line_type::none;
+    line_type type = line_type::none;
+    line_type next_type = line_type::none;
+    bool trailing_return = false;
+    // depending on the type, one of the following members is to be used
+    std::vector<command_t> commands;
+    class_data_t class_data;
+    member_t member;
+
+    line_t() = default;
+
+    line_t(line_type t) : type(t)
+    {
+    }
+
+    line_t(line_type t, const std::vector<command_t>& c) : type(t), commands(c)
+    {
+    }
+
+    line_t(const class_data_t& data) : type(line_type::class_begin), class_data(data)
+    {
+    }
+
+    line_t(const member_t& data) : type(line_type::member), member(data)
+    {
+    }
+  };
+
+  static const auto empty_line = line_t{};
+
   struct parse_context
   {
     std::istream& is;
@@ -58,13 +101,7 @@ namespace kiste
     std::string line;
     std::size_t line_no = 0;
     std::size_t curly_level = 0;
-    /*
-    bool trailing_return = true;
-    bool stream_opened = false;
-    bool string_opened = false;
-    LineType previous_line_type = LineType::None;
-    */
-    class_data_t class_data;
+    std::size_t class_curly_level = 0;
 
     parse_context(std::istream& is_,
                   std::ostream& os_,
@@ -162,44 +199,41 @@ namespace kiste
     }
   }
 
-  auto parse_text_line(const parse_context& ctx) -> std::vector<command_t>
+  auto parse_text_line(const parse_context& ctx, const std::string& line) -> line_t
   {
-    if (ctx.curly_level <= ctx.class_data.curly_level)
-      throw parse_error(ctx, "Unexpected text outside of function");
+    if (ctx.curly_level <= ctx.class_curly_level)
+      throw parse_error(ctx, "Unexpected text outside of member function");
 
-    auto line = std::vector<command_t>{};
-    for (std::size_t pos = 0; pos < ctx.line.size(); ++pos)
+    auto commands = std::vector<command_t>{};
+    for (std::size_t pos = 0; pos < line.size(); ++pos)
     {
-      switch (ctx.line.at(pos))
+      switch (line.at(pos))
       {
       case '$':
-        line.push_back(parse_command(ctx, ++pos));
-        pos = line.back().end_pos;
+        commands.push_back(parse_command(ctx, ++pos));
+        pos = commands.back().end_pos;
         break;
       default:
-        if (line.empty() or line.back().type != command_type::text)
+        if (commands.empty() or commands.back().type != command_type::text)
         {
-          line.push_back({pos, command_type::text, ""});
+          commands.push_back({pos, command_type::text, ""});
         }
-        line.back().text.push_back(ctx.line.at(pos));
+        commands.back().text.push_back(line.at(pos));
         break;
       }
     }
 
-    return line;
+    return line_t{line_type::text, commands};
   }
 
   void write_header(const parse_context& ctx)
   {
-    if (not ctx.class_data.name.empty())
-      throw parse_error(ctx, "class not ended at the end of the file, did you forget $endclass?");
-
     auto serializer = kiste::cpp(ctx.os);
     auto kissTemplate = kiste::KisteTemplate(ctx, serializer);
     kissTemplate.render_header();
   }
 
-  void write_lines(const parse_context& ctx, const std::vector<std::vector<command_t>>& lines)
+  void write_lines(const parse_context& ctx, const std::vector<line_t>& lines)
   {
     auto serializer = kiste::cpp(ctx.os);
     auto lineTemplate = kiste::LineTemplate(ctx, serializer);
@@ -222,7 +256,7 @@ namespace kiste
 
   void write_class_footer(const parse_context& ctx)
   {
-    if (ctx.class_data.name.empty())
+    if (ctx.class_curly_level)
       throw parse_error(ctx, "No class to end here");
 
     auto serializer = kiste::cpp(ctx.os);
@@ -232,7 +266,7 @@ namespace kiste
 
   void write_footer(const parse_context& ctx)
   {
-    if (not ctx.class_data.name.empty())
+    if (ctx.class_curly_level)
       throw parse_error(ctx, "class not ended at the end of the file, did you forget $endclass?");
 
     auto serializer = kiste::cpp(ctx.os);
@@ -270,7 +304,7 @@ namespace kiste
 
   auto parse_class_member(const parse_context& ctx, const std::string& line) -> member_t
   {
-    if (ctx.class_data.name.empty())
+    if (not ctx.class_curly_level)
     {
       throw parse_error(ctx, "Cannot add a member here, did you forget to call $class?");
     }
@@ -299,9 +333,9 @@ namespace kiste
     return {member_class_name, member_name};
   }
 
-  auto parse_class(parse_context& ctx, const std::string& line) -> class_data_t
+  auto parse_class(const parse_context& ctx, const std::string& line) -> class_data_t
   {
-    if (not ctx.class_data.name.empty())
+    if (ctx.class_curly_level)
       throw parse_error(ctx, "Cannot open new class here, did you forget to call $endclass?");
     const auto nameBegin = line.find_first_not_of(" \t", std::strlen("class"));
     if (nameBegin == line.npos)
@@ -321,88 +355,141 @@ namespace kiste
     return cd;
   }
 
-  void parse(parse_context& ctx)
+  auto parse_line(const parse_context& ctx) -> line_t
   {
-    auto lines = std::vector<std::vector<command_t>>{};
+    const auto pos_first_char = ctx.line.find_first_not_of(" \t");
+    if (pos_first_char == ctx.line.npos)
+    {
+      if (ctx.class_curly_level and ctx.curly_level > ctx.class_curly_level)
+      {
+        return parse_text_line(ctx, ctx.line);
+      }
+      else
+      {
+        return empty_line;
+      }
+    }
+    else
+    {
+      const auto rest = ctx.line.substr(pos_first_char + 1);
+      switch (ctx.line.at(pos_first_char))
+      {
+      case '%':  // cpp line
+        return line_t{line_type::cpp,
+                      std::vector<command_t>{{0,
+                                              command_type::cpp,
+                                              ctx.line.substr(0, pos_first_char) +
+                                                  ctx.line.substr(pos_first_char + 1)}}};
+        break;
+      case '$':  // opening / closing class or text line
+        if (starts_with(rest, "class"))
+        {
+          return {parse_class(ctx, rest)};
+        }
+        else if (starts_with(rest, "endclass"))
+        {
+          return {line_type::class_end, {}};
+        }
+        else if (starts_with(rest, "member"))
+        {
+          return parse_class_member(ctx, rest);
+        }
+        else if (starts_with(rest, "|"))  // trim left
+        {
+          return parse_text_line(ctx, ctx.line.substr(pos_first_char + 2));
+        }
+        else
+        {
+          return parse_text_line(ctx, ctx.line);
+        }
+        break;
+      default:
+        return parse_text_line(ctx, ctx.line);
+      }
+    }
+  }
 
+  auto determine_curly_level(const parse_context& ctx) -> std::size_t
+  {
+    auto level = ctx.curly_level;
+    for (const auto& c : ctx.line)
+    {
+      switch (c)
+      {
+      case '{':
+        ++level;
+        break;
+      case '}':
+        if (level == 0)
+          throw parse_error(ctx, "Too many closing curly braces in C++");
+        --level;
+        break;
+      default:
+        break;
+      }
+    }
+    return level;
+  }
+
+  auto determine_class_curly_level(const parse_context& ctx, const line_t& line) -> std::size_t
+  {
+    switch (line.type)
+    {
+    case line_type::class_begin:
+      return ctx.curly_level;
+    case line_type::class_end:
+      return 0;
+    default:
+      return ctx.class_curly_level;
+    }
+  }
+
+  auto has_trailing_return(const line_t& line) -> bool
+  {
+    if (line.type == line_type::text and not line.commands.empty() and
+        line.commands.back().type == command_type::trim_trailing_return)
+    {
+      return false;
+    }
+    return true;
+  }
+
+  auto get_line_type(const line_t* line) -> line_type
+  {
+    if (not line)
+    {
+      return line_type::none;
+    }
+    return line->type;
+  }
+
+  auto parse(parse_context& ctx) -> std::vector<line_t>
+  {
+    auto lines = std::vector<line_t>{};
+
+    auto previous_line = static_cast<line_t*>(nullptr);
     while (ctx.is.good())
     {
       ++ctx.line_no;
       getline(ctx.is, ctx.line);
 
-      const auto pos_first_char = ctx.line.find_first_not_of(" \t");
-      if (pos_first_char == ctx.line.npos)
+      lines.push_back(parse_line(ctx));
+      auto& line = lines.back();
+
+      ctx.curly_level = determine_curly_level(ctx);
+      ctx.class_curly_level = determine_class_curly_level(ctx, line);
+
+      line.curly_level = ctx.curly_level;
+      line.class_curly_level = ctx.class_curly_level;
+      line.trailing_return = has_trailing_return(line);  // (not line.commands.empty() and
+                                                         // line.commands.back().type ==
+                                                         // command_type::trim_trailing_return);
+      if (previous_line)
       {
-        if (not ctx.class_data.name.empty() and ctx.curly_level > ctx.class_data.curly_level)
-        {
-          lines.push_back(parse_text_line(ctx));
-        }
-        else
-        {
-          lines.push_back(empty_line);
-        }
+        line.previous_type = get_line_type(previous_line);
+        previous_line->next_type = line.type;
       }
-      else
-      {
-        const auto rest = ctx.line.substr(pos_first_char + 1);
-        switch (ctx.line.at(pos_first_char))
-        {
-        case '%':  // cpp line
-          for (const auto& c : ctx.line)
-          {
-            switch (c)
-            {
-            case '{':
-              ++ctx.curly_level;
-              break;
-            case '}':
-              if (ctx.curly_level == 0)
-                throw parse_error(ctx, "Too many closing curly braces in C++");
-              --ctx.curly_level;
-              break;
-            default:
-              break;
-            }
-          }
-          lines.push_back({command_t{
-              0,
-              command_type::cpp,
-              ctx.line.substr(0, pos_first_char) + ctx.line.substr(pos_first_char + 1)}});
-          break;
-        case '$':  // opening / closing class or text line
-          if (starts_with(rest, "class"))
-          {
-            write_lines(ctx, lines);
-            lines = {};
-            ctx.class_data = parse_class(ctx, rest);
-            write_class_header(ctx);
-          }
-          else if (starts_with(rest, "endclass"))
-          {
-            write_lines(ctx, lines);
-            lines = {};
-            write_class_footer(ctx);
-            ctx.class_data = {};
-          }
-          else if (starts_with(rest, "member"))
-          {
-            const auto member = parse_class_member(ctx, rest);
-            write_class_member(ctx, member);
-          }
-          else if (starts_with(rest, "|"))  // trim left
-          {
-            ctx.line = ctx.line.substr(pos_first_char + 2);
-            lines.push_back(parse_text_line(ctx));
-          }
-          else
-          {
-            lines.push_back(parse_text_line(ctx));
-          }
-          break;
-        default:
-          lines.push_back(parse_text_line(ctx));
-        }
-      }
+      previous_line = &line;
     }
     write_lines(ctx, lines);
     lines = {};
@@ -410,6 +497,8 @@ namespace kiste
     {
       throw parse_error(ctx, "not enough closing curly braces");
     }
+
+    return lines;
   }
 }
 
@@ -486,9 +575,8 @@ auto main(int argc, char** argv) -> int
 
   try
   {
-    kiste::write_header(ctx);
-    kiste::parse(ctx);
-    kiste::write_footer(ctx);
+    const auto lines = kiste::parse(ctx);
+    kiste::write(ctx, lines);
   }
   catch (const kiste::parse_error& e)
   {

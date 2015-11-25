@@ -45,16 +45,16 @@ struct LineTemplate_t
 
     void escape(const std::string& expression)
     {
-      _serialize.text("      "); static_assert(std::is_same<decltype(open_exception_handling()), void>::value, "$call{} requires void expression"); (open_exception_handling()); _serialize.text("\n"
+      _serialize.text(""); static_assert(std::is_same<decltype(open_exception_handling()), void>::value, "$call{} requires void expression"); (open_exception_handling()); _serialize.text(""
              " _serialize.escape("); _serialize.raw(expression); _serialize.text("); "
-             "      "); static_assert(std::is_same<decltype(close_exception_handling(expression)), void>::value, "$call{} requires void expression"); (close_exception_handling(expression)); _serialize.text("\n");
+             ""); static_assert(std::is_same<decltype(close_exception_handling(expression)), void>::value, "$call{} requires void expression"); (close_exception_handling(expression)); _serialize.text("");
     }
 
     void raw(const std::string& expression)
     {
-      _serialize.text("      "); static_assert(std::is_same<decltype(open_exception_handling()), void>::value, "$call{} requires void expression"); (open_exception_handling()); _serialize.text("\n"
+      _serialize.text(""); static_assert(std::is_same<decltype(open_exception_handling()), void>::value, "$call{} requires void expression"); (open_exception_handling()); _serialize.text(""
              " _serialize.raw("); _serialize.raw(expression); _serialize.text("); "
-             "      "); static_assert(std::is_same<decltype(close_exception_handling(expression)), void>::value, "$call{} requires void expression"); (close_exception_handling(expression)); _serialize.text("\n");
+             ""); static_assert(std::is_same<decltype(close_exception_handling(expression)), void>::value, "$call{} requires void expression"); (close_exception_handling(expression)); _serialize.text("");
     }
 
     void call(const std::string& expression)
@@ -99,41 +99,50 @@ struct LineTemplate_t
       for (const auto& line : lines)
       {
         auto trailing_return = true;
-        for (const auto& command : line)
-        {
+        for (const auto& command : line.commands)
+        {/*
           switch(command.type)
           {
+          case command_type::none:
+            break;
           case command_type::cpp:
-            _serialize.text("            "); static_assert(std::is_same<decltype(close_string(string_opened)), void>::value, "$call{} requires void expression"); (close_string(string_opened)); _serialize.text("\n"
-                   "            "); static_assert(std::is_same<decltype(cpp_line(command.text)), void>::value, "$call{} requires void expression"); (cpp_line(command.text)); _serialize.text("\n");
+            _serialize.text(""); static_assert(std::is_same<decltype(close_string(string_opened)), void>::value, "$call{} requires void expression"); (close_string(string_opened)); _serialize.text(""
+                   ""); static_assert(std::is_same<decltype(cpp_line(command.text)), void>::value, "$call{} requires void expression"); (cpp_line(command.text)); _serialize.text("");
             break;
           case command_type::text:
-            _serialize.text("            "); static_assert(std::is_same<decltype(open_string(string_opened)), void>::value, "$call{} requires void expression"); (open_string(string_opened)); _serialize.text("\n"
-                   "            "); static_assert(std::is_same<decltype(text_segment(command.text)), void>::value, "$call{} requires void expression"); (text_segment(command.text)); _serialize.text("\n");
+            _serialize.text(""); static_assert(std::is_same<decltype(open_string(string_opened)), void>::value, "$call{} requires void expression"); (open_string(string_opened)); _serialize.text(""
+                   ""); static_assert(std::is_same<decltype(text_segment(command.text)), void>::value, "$call{} requires void expression"); (text_segment(command.text)); _serialize.text("");
             break;
           case command_type::trim_trailing_return:
             trailing_return = false;
             break;
           case command_type::escape:
-            _serialize.text("            "); static_assert(std::is_same<decltype(close_string(string_opened)), void>::value, "$call{} requires void expression"); (close_string(string_opened)); _serialize.text("\n"
-                   "            "); static_assert(std::is_same<decltype(escape(command.text)), void>::value, "$call{} requires void expression"); (escape(command.text)); _serialize.text("\n");
+            _serialize.text(""); static_assert(std::is_same<decltype(close_string(string_opened)), void>::value, "$call{} requires void expression"); (close_string(string_opened)); _serialize.text(""
+                   ""); static_assert(std::is_same<decltype(escape(command.text)), void>::value, "$call{} requires void expression"); (escape(command.text)); _serialize.text("");
             break;
-            _serialize.text("    //ctx.open_text();\n"
-                   "    //ctx.os << \"  \";\n"
-                   "    //for (std::size_t i = 0; i < ctx.curly_level; ++i)\n"
-                   "    //{\n"
-                   "      //ctx.os << \"  \";\n"
-                   "    //}\n");
           }
-        }
+        */}
+        _serialize.text("\n");
       }
     }
 
+ void old_code()
+ {
+      /*
+      _serialize.text("    //ctx.open_text();\n"
+             "    //ctx.os << \"  \";\n"
+             "    //for (std::size_t i = 0; i < ctx.curly_level; ++i)\n"
+             "    //{\n"
+             "      //ctx.os << \"  \";\n"
+             "    //}\n");
+    */
+      _serialize.text("\n");
+ }
   // ----------------------------------------------------------------------
-#line 112
+#line 121
 };
 
-#line 112
+#line 121
 template<typename DATA_T, typename SERIALIZER_T>
 auto LineTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   -> LineTemplate_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -141,7 +150,7 @@ auto LineTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   return {kiste::terminal, data, serialize};
 }
 
-#line 113
+#line 122
 }
 
 
