@@ -2,18 +2,19 @@
 %{
   $class ClassTemplate
 
-    %void render_header()
+    %template<typename ClassData>
+    %void render_header(const ClassData& class_data)
     %{
       $|template<typename DERIVED_T, typename DATA_T, typename SERIALIZER_T>
-      $|struct ${data.class_data.name}_t
-      %if (!data.class_data.parent_name.empty())
+      $|struct ${class_data.name}_t
+      %if (!class_data.parent_name.empty())
       %{
-      $|   : public ${data.class_data.parent_name}_t<${data.class_data.name}_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>
+      $|   : public ${class_data.parent_name}_t<${class_data.name}_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>
       %}
       $|{
-      %if (!data.class_data.parent_name.empty())
+      %if (!class_data.parent_name.empty())
       %{
-      $|  using _parent_t = ${data.class_data.parent_name}_t<${data.class_data.name}_t, DATA_T, SERIALIZER_T>;
+      $|  using _parent_t = ${class_data.parent_name}_t<${class_data.name}_t, DATA_T, SERIALIZER_T>;
       $|  _parent_t& parent;
       %}
       $|  DERIVED_T& child;
@@ -22,8 +23,8 @@
       $|  using _serializer_t = SERIALIZER_T;
       $|  _serializer_t& _serialize;
 
-      $|  ${data.class_data.name}_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):
-      %if (!data.class_data.parent_name.empty())
+      $|  ${class_data.name}_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):
+      %if (!class_data.parent_name.empty())
       %{
       $|    _parent_t{*this, data_, serialize},
       $|    parent(*this),
@@ -36,16 +37,17 @@
       $|#line ${data.line_no + 1}
     %}
 
-    %template<typename Member>
-    %void render_member(const Member& member)
+    %template<typename ClassData, typename Member>
+    %void render_member(const ClassData& class_data, const Member& member)
     %{
       %// The "using" is required for clang-3.1 and older g++ versions
-      %const auto class_alias = member.class_name + "_t_alias";
-      $|using ${class_alias} = ${member.class_name}_t<${data.class_data.name}_t, _data_t, _serializer_t>;$|
+      %auto class_alias = member.class_name + "_t_alias";
+      $|using ${class_alias} = ${member.class_name}_t<${class_data.name}_t, _data_t, _serializer_t>;$|
       $|${class_alias} ${member.name} = ${class_alias}{*this, data, _serialize};
     %}
 
-    %void render_footer()
+    %template<typename ClassData>
+    %void render_footer(const ClassData& class_data)
     %{
       $|  // ----------------------------------------------------------------------
       $|#line ${data.line_no}
@@ -53,8 +55,8 @@
 
       $|#line ${data.line_no}
       $|template<typename DATA_T, typename SERIALIZER_T>
-      $|auto ${data.class_data.name}(const DATA_T& data, SERIALIZER_T& serialize)
-      $|  -> ${data.class_data.name}_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
+      $|auto ${class_data.name}(const DATA_T& data, SERIALIZER_T& serialize)
+      $|  -> ${class_data.name}_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
       $|{
       $|  return {kiste::terminal, data, serialize};
       $|}

@@ -22,7 +22,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-add_executable(kiste2cpp kiste2cpp.cpp)
+add_executable(kiste2cpp
+	kiste2cpp.cpp
+	parse_context.cpp
+	line.cpp
+	)
 target_link_libraries(kiste2cpp PRIVATE kiste)
 
 install(TARGETS kiste2cpp RUNTIME DESTINATION bin)

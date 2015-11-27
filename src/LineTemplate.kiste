@@ -1,3 +1,6 @@
+%#include "command_type.h"
+%#include "line_type.h"
+
 %namespace kiste
 %{
   $class LineTemplate
@@ -40,13 +43,8 @@
     %void call(const std::string& expression)
     %{
       $call{open_exception_handling()}
-      $| _serialize.call($raw{expression}); $|
+      $|static_assert(std::is_same<decltype($raw{expression}), void>::value, "$$call{} requires void expression"); ($raw{expression}); $|
       $call{close_exception_handling(expression)}
-    %}
-
-    %void cpp_line(const std::string& line)
-    %{
-      $|$raw{line}$|
     %}
 
     %void open_string(bool& string_opened)
@@ -72,38 +70,54 @@
       $|"${line}"$|
     %}
 
-    %template<typename Lines>
-    %void render_lines(const Lines& lines)
+    %void render_none()
     %{
-      %auto string_opened = false;
-      %for (const auto& line : lines)
+
+    %}
+
+    %template<typename Line>
+    %void render_text(const Line& line)
+    %{
+      %auto string_opened = (line.previous_type == line_type::text);
+      %for (const auto& segment : line.commands)
       %{
-        %auto trailing_return = true;
-        %for (const auto& command : line.commands)
-        %{/*
-          %switch(command.type)
-          %{
-          %case command_type::none:
-            %break;
-          %case command_type::cpp:
-            $|$call{close_string(string_opened)}$|
-            $|$call{cpp_line(command.text)}$|
-            %break;
-          %case command_type::text:
-            $|$call{open_string(string_opened)}$|
-            $|$call{text_segment(command.text)}$|
-            %break;
-          %case command_type::trim_trailing_return:
-            %trailing_return = false;
-            %break;
-          %case command_type::escape:
-            $|$call{close_string(string_opened)}$|
-            $|$call{escape(command.text)}$|
-            %break;
-          %}
-        %*/}
+        %switch(segment.type)
+        %{
+        %case command_type::text:
+          $|$call{open_string(string_opened)}$|
+          $|$call{text_segment(segment.text)}$|
+          %break;
+        %case command_type::trim_trailing_return:
+          $|$call{close_string(string_opened)}$|
+          %break;
+        %case command_type::escape:
+          $|$call{close_string(string_opened)}$|
+          $|$call{escape(segment.text)}$|
+          %break;
+        %case command_type::call:
+          $|$call{close_string(string_opened)}$|
+          $|$call{call(segment.text)}$|
+          %break;
+        %case command_type::raw:
+          $|$call{close_string(string_opened)}$|
+          $|$call{raw(segment.text)}$|
+          %break;
+        %}
+      %}
+      %if (line.next_type != line_type::text)
+      %{
+        $|$call{close_string(string_opened)}$|
+      %}
+      %if (line.trailing_return)
+      %{
 
       %}
+    %}
+
+    %template<typename Line>
+    %void render_cpp(const Line& line)
+    %{
+      $|$raw{line.commands[0].text}
     %}
 
 % void old_code()

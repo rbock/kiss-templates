@@ -9,7 +9,11 @@
 #include "KisteTemplate.h"
 #include "ClassTemplate.h"
 #include "LineTemplate.h"
+#include "parse_context.h"
+#include "line.h"
 #include <kiste/cpp.h>
+
+#warning : Need to add license all over the place
 
 namespace kiste
 {
@@ -26,103 +30,6 @@ namespace kiste
     }
     return true;
   }
-
-  struct command_t
-  {
-    std::size_t end_pos;
-    command_type type;
-    std::string text;
-  };
-
-  enum class line_type
-  {
-    none,
-    cpp,
-    text,
-    command,
-    class_begin,
-    class_end,
-    member,
-  };
-
-  struct member_t
-  {
-    std::string class_name;
-    std::string name;
-  };
-
-  struct class_data_t
-  {
-    std::size_t curly_level = 0;
-    std::string name;
-    std::string parent_name;
-  };
-
-  struct line_t
-  {
-    std::size_t curly_level = 0;
-    std::size_t class_curly_level = 0;
-    line_type previous_type = line_type::none;
-    line_type type = line_type::none;
-    line_type next_type = line_type::none;
-    bool trailing_return = false;
-    // depending on the type, one of the following members is to be used
-    std::vector<command_t> commands;
-    class_data_t class_data;
-    member_t member;
-
-    line_t() = default;
-
-    line_t(line_type t) : type(t)
-    {
-    }
-
-    line_t(line_type t, const std::vector<command_t>& c) : type(t), commands(c)
-    {
-    }
-
-    line_t(const class_data_t& data) : type(line_type::class_begin), class_data(data)
-    {
-    }
-
-    line_t(const member_t& data) : type(line_type::member), member(data)
-    {
-    }
-  };
-
-  static const auto empty_line = line_t{};
-
-  struct parse_context
-  {
-    std::istream& is;
-    std::ostream& os;
-    std::string filename;
-    bool report_exceptions = false;
-    std::string line;
-    std::size_t line_no = 0;
-    std::size_t curly_level = 0;
-    std::size_t class_curly_level = 0;
-
-    parse_context(std::istream& is_,
-                  std::ostream& os_,
-                  const std::string& filename_,
-                  bool report_exceptions_)
-        : is(is_), os(os_), filename{filename_}, report_exceptions{report_exceptions_}
-    {
-    }
-  };
-
-  struct parse_error : public std::runtime_error
-  {
-    std::string filename;
-    std::string line;
-    std::size_t line_no = 0;
-
-    parse_error(const parse_context& ctx, const std::string& message)
-        : std::runtime_error{message}, filename{ctx.filename}, line{ctx.line}, line_no{ctx.line_no}
-    {
-    }
-  };
 
   auto parse_expression(const parse_context& ctx, command_type type, std::size_t pos) -> command_t
   {
@@ -226,54 +133,6 @@ namespace kiste
     return line_t{line_type::text, commands};
   }
 
-  void write_header(const parse_context& ctx)
-  {
-    auto serializer = kiste::cpp(ctx.os);
-    auto kissTemplate = kiste::KisteTemplate(ctx, serializer);
-    kissTemplate.render_header();
-  }
-
-  void write_lines(const parse_context& ctx, const std::vector<line_t>& lines)
-  {
-    auto serializer = kiste::cpp(ctx.os);
-    auto lineTemplate = kiste::LineTemplate(ctx, serializer);
-    lineTemplate.render_lines(lines);
-  }
-
-  auto write_class_header(const parse_context& ctx) -> void
-  {
-    auto serializer = kiste::cpp(ctx.os);
-    auto classTemplate = kiste::ClassTemplate(ctx, serializer);
-    classTemplate.render_header();
-  }
-
-  auto write_class_member(const parse_context& ctx, const member_t& member) -> void
-  {
-    auto serializer = kiste::cpp(ctx.os);
-    auto classTemplate = kiste::ClassTemplate(ctx, serializer);
-    classTemplate.render_member(member);
-  }
-
-  void write_class_footer(const parse_context& ctx)
-  {
-    if (ctx.class_curly_level)
-      throw parse_error(ctx, "No class to end here");
-
-    auto serializer = kiste::cpp(ctx.os);
-    auto classTemplate = ClassTemplate(ctx, serializer);
-    classTemplate.render_footer();
-  }
-
-  void write_footer(const parse_context& ctx)
-  {
-    if (ctx.class_curly_level)
-      throw parse_error(ctx, "class not ended at the end of the file, did you forget $endclass?");
-
-    auto serializer = kiste::cpp(ctx.os);
-    auto kissTemplate = kiste::KisteTemplate(ctx, serializer);
-    kissTemplate.render_footer();
-  }
-
   auto parse_parent_class(const parse_context& ctx, const std::string& line) -> std::string
   {
     const auto colonPos = line.find_first_not_of(" \t");
@@ -333,7 +192,7 @@ namespace kiste
     return {member_class_name, member_name};
   }
 
-  auto parse_class(const parse_context& ctx, const std::string& line) -> class_data_t
+  auto parse_class(const parse_context& ctx, const std::string& line) -> class_t
   {
     if (ctx.class_curly_level)
       throw parse_error(ctx, "Cannot open new class here, did you forget to call $endclass?");
@@ -342,11 +201,9 @@ namespace kiste
       throw parse_error(ctx, "Could not find class name");
     const auto nameEnd = line.find_first_of(" \t", nameBegin);
 
-    auto cd = class_data_t{};
+    auto cd = class_t{};
     cd.name = (nameEnd == line.npos) ? line.substr(nameBegin)
                                      : line.substr(nameBegin, nameEnd - nameBegin);
-    cd.curly_level = ctx.curly_level;
-
     if (nameEnd != line.npos)
     {
       cd.parent_name = parse_parent_class(ctx, line.substr(nameEnd));
@@ -366,7 +223,7 @@ namespace kiste
       }
       else
       {
-        return empty_line;
+        return line_t{};
       }
     }
     else
@@ -409,51 +266,6 @@ namespace kiste
     }
   }
 
-  auto determine_curly_level(const parse_context& ctx) -> std::size_t
-  {
-    auto level = ctx.curly_level;
-    for (const auto& c : ctx.line)
-    {
-      switch (c)
-      {
-      case '{':
-        ++level;
-        break;
-      case '}':
-        if (level == 0)
-          throw parse_error(ctx, "Too many closing curly braces in C++");
-        --level;
-        break;
-      default:
-        break;
-      }
-    }
-    return level;
-  }
-
-  auto determine_class_curly_level(const parse_context& ctx, const line_t& line) -> std::size_t
-  {
-    switch (line.type)
-    {
-    case line_type::class_begin:
-      return ctx.curly_level;
-    case line_type::class_end:
-      return 0;
-    default:
-      return ctx.class_curly_level;
-    }
-  }
-
-  auto has_trailing_return(const line_t& line) -> bool
-  {
-    if (line.type == line_type::text and not line.commands.empty() and
-        line.commands.back().type == command_type::trim_trailing_return)
-    {
-      return false;
-    }
-    return true;
-  }
-
   auto get_line_type(const line_t* line) -> line_type
   {
     if (not line)
@@ -475,15 +287,9 @@ namespace kiste
 
       lines.push_back(parse_line(ctx));
       auto& line = lines.back();
+      ctx.update(line);
+      line.update(ctx);
 
-      ctx.curly_level = determine_curly_level(ctx);
-      ctx.class_curly_level = determine_class_curly_level(ctx, line);
-
-      line.curly_level = ctx.curly_level;
-      line.class_curly_level = ctx.class_curly_level;
-      line.trailing_return = has_trailing_return(line);  // (not line.commands.empty() and
-                                                         // line.commands.back().type ==
-                                                         // command_type::trim_trailing_return);
       if (previous_line)
       {
         line.previous_type = get_line_type(previous_line);
@@ -491,14 +297,50 @@ namespace kiste
       }
       previous_line = &line;
     }
-    write_lines(ctx, lines);
-    lines = {};
-    if (ctx.curly_level)
+    if (previous_line->curly_level)
     {
       throw parse_error(ctx, "not enough closing curly braces");
     }
 
     return lines;
+  }
+
+  auto write(const parse_context& ctx, const std::vector<line_t>& lines) -> void
+  {
+    auto serializer = ::kiste::cpp(ctx.os);
+    auto kissTemplate = ::kiste::KisteTemplate(ctx, serializer);
+    auto classTemplate = ::kiste::ClassTemplate(ctx, serializer);
+    auto lineTemplate = ::kiste::LineTemplate(ctx, serializer);
+
+    auto class_data = class_t{};
+
+    kissTemplate.render_header();
+    for (const auto& line : lines)
+    {
+      switch (line.type)
+      {
+      case line_type::none:
+        lineTemplate.render_none();
+        break;
+      case line_type::cpp:
+        lineTemplate.render_cpp(line);
+        break;
+      case line_type::text:
+        lineTemplate.render_text(line);
+        break;
+      case line_type::class_begin:
+        class_data = line.class_data;
+        classTemplate.render_header(class_data);
+        break;
+      case line_type::member:
+        classTemplate.render_member(class_data, line.member);
+        break;
+      case line_type::class_end:
+        classTemplate.render_footer(class_data);
+        break;
+      }
+    }
+    kissTemplate.render_footer();
   }
 }
 

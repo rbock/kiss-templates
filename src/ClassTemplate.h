@@ -22,18 +22,19 @@ struct ClassTemplate_t
   // ----------------------------------------------------------------------
 #line 4
 
-    void render_header()
+    template<typename ClassData>
+    void render_header(const ClassData& class_data)
     {
       _serialize.text("template<typename DERIVED_T, typename DATA_T, typename SERIALIZER_T>\n"
-             "struct "); _serialize.escape(data.class_data.name); _serialize.text("_t\n");
-      if (!data.class_data.parent_name.empty())
+             "struct "); _serialize.escape(class_data.name); _serialize.text("_t\n");
+      if (!class_data.parent_name.empty())
       {
-        _serialize.text("   : public "); _serialize.escape(data.class_data.parent_name); _serialize.text("_t<"); _serialize.escape(data.class_data.name); _serialize.text("_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>\n");
+        _serialize.text("   : public "); _serialize.escape(class_data.parent_name); _serialize.text("_t<"); _serialize.escape(class_data.name); _serialize.text("_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>\n");
       }
       _serialize.text("{\n");
-      if (!data.class_data.parent_name.empty())
+      if (!class_data.parent_name.empty())
       {
-        _serialize.text("  using _parent_t = "); _serialize.escape(data.class_data.parent_name); _serialize.text("_t<"); _serialize.escape(data.class_data.name); _serialize.text("_t, DATA_T, SERIALIZER_T>;\n"
+        _serialize.text("  using _parent_t = "); _serialize.escape(class_data.parent_name); _serialize.text("_t<"); _serialize.escape(class_data.name); _serialize.text("_t, DATA_T, SERIALIZER_T>;\n"
                "  _parent_t& parent;\n");
       }
       _serialize.text("  DERIVED_T& child;\n"
@@ -42,8 +43,8 @@ struct ClassTemplate_t
              "  using _serializer_t = SERIALIZER_T;\n"
              "  _serializer_t& _serialize;\n"
              "\n"
-             "  "); _serialize.escape(data.class_data.name); _serialize.text("_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):\n");
-      if (!data.class_data.parent_name.empty())
+             "  "); _serialize.escape(class_data.name); _serialize.text("_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):\n");
+      if (!class_data.parent_name.empty())
       {
         _serialize.text("    _parent_t{*this, data_, serialize},\n"
                "    parent(*this),\n");
@@ -56,16 +57,17 @@ struct ClassTemplate_t
              "#line "); _serialize.escape(data.line_no + 1); _serialize.text("\n");
     }
 
-    template<typename Member>
-    void render_member(const Member& member)
+    template<typename ClassData, typename Member>
+    void render_member(const ClassData& class_data, const Member& member)
     {
       // The "using" is required for clang-3.1 and older g++ versions
-      const auto class_alias = member.class_name + "_t_alias";
-      _serialize.text("using "); _serialize.escape(class_alias); _serialize.text(" = "); _serialize.escape(member.class_name); _serialize.text("_t<"); _serialize.escape(data.class_data.name); _serialize.text("_t, _data_t, _serializer_t>;"
+      auto class_alias = member.class_name + "_t_alias";
+      _serialize.text("using "); _serialize.escape(class_alias); _serialize.text(" = "); _serialize.escape(member.class_name); _serialize.text("_t<"); _serialize.escape(class_data.name); _serialize.text("_t, _data_t, _serializer_t>;"
              ""); _serialize.escape(class_alias); _serialize.text(" "); _serialize.escape(member.name); _serialize.text(" = "); _serialize.escape(class_alias); _serialize.text("{*this, data, _serialize};\n");
     }
 
-    void render_footer()
+    template<typename ClassData>
+    void render_footer(const ClassData& class_data)
     {
       _serialize.text("  // ----------------------------------------------------------------------\n"
              "#line "); _serialize.escape(data.line_no); _serialize.text("\n"
@@ -73,8 +75,8 @@ struct ClassTemplate_t
              "\n"
              "#line "); _serialize.escape(data.line_no); _serialize.text("\n"
              "template<typename DATA_T, typename SERIALIZER_T>\n"
-             "auto "); _serialize.escape(data.class_data.name); _serialize.text("(const DATA_T& data, SERIALIZER_T& serialize)\n"
-             "  -> "); _serialize.escape(data.class_data.name); _serialize.text("_t<kiste::terminal_t, DATA_T, SERIALIZER_T>\n"
+             "auto "); _serialize.escape(class_data.name); _serialize.text("(const DATA_T& data, SERIALIZER_T& serialize)\n"
+             "  -> "); _serialize.escape(class_data.name); _serialize.text("_t<kiste::terminal_t, DATA_T, SERIALIZER_T>\n"
              "{\n"
              "  return {kiste::terminal, data, serialize};\n"
              "}\n"
@@ -83,10 +85,10 @@ struct ClassTemplate_t
     }
 
   // ----------------------------------------------------------------------
-#line 65
+#line 67
 };
 
-#line 65
+#line 67
 template<typename DATA_T, typename SERIALIZER_T>
 auto ClassTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   -> ClassTemplate_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -94,7 +96,7 @@ auto ClassTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   return {kiste::terminal, data, serialize};
 }
 
-#line 66
+#line 68
 }
 
 
