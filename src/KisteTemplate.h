@@ -31,8 +31,11 @@ struct KisteTemplate_t
         _serialize.text("#include <exception>\n");
       }
       _serialize.text("#include <kiste/terminal.h>\n"
-             "\n"
-             "#line 1 \""); _serialize.escape(data._filename); _serialize.text("\"\n");
+             "\n");
+      if (data._line_directives)
+      {
+        _serialize.text("#line 1 \""); _serialize.escape(data._filename); _serialize.text("\"\n");
+      }
     }
 
     void render_footer()
@@ -41,10 +44,10 @@ struct KisteTemplate_t
     }
 
   // ----------------------------------------------------------------------
-#line 23
+#line 26
 };
 
-#line 23
+#line 26
 template<typename DATA_T, typename SERIALIZER_T>
 auto KisteTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   -> KisteTemplate_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -52,7 +55,7 @@ auto KisteTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   return {kiste::terminal, data, serialize};
 }
 
-#line 24
+#line 27
 }
 
 

@@ -14,6 +14,7 @@ namespace kiste
     std::ostream& _os;
     std::string _filename;
     bool _report_exceptions = false;
+    bool _line_directives = true;
     std::string _line;
     std::size_t _line_no = 0;
     std::size_t _curly_level = 0;
@@ -23,8 +24,13 @@ namespace kiste
     parse_context(std::istream& is,
                   std::ostream& os,
                   const std::string& filename,
-                  bool report_exceptions)
-        : _is(is), _os(os), _filename{filename}, _report_exceptions{report_exceptions}
+                  bool report_exceptions,
+                  bool line_directives)
+        : _is(is),
+          _os(os),
+          _filename{filename},
+          _report_exceptions{report_exceptions},
+          _line_directives{line_directives}
     {
     }
 

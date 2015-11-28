@@ -22,6 +22,14 @@ struct ClassTemplate_t
   // ----------------------------------------------------------------------
 #line 4
 
+    void line_directive(const size_t line_no)
+    {
+      if (data._line_directives)
+      {
+        _serialize.text("#line "); _serialize.escape(line_no); _serialize.text("");
+      }
+    }
+
     template<typename ClassData>
     void render_header(const size_t line_no, const ClassData& class_data)
     {
@@ -53,7 +61,7 @@ struct ClassTemplate_t
              "    data(data_),\n"
              "    _serialize(serialize)\n"
              "  {}\n"
-             "#line "); _serialize.escape(line_no + 1); _serialize.text("\n");
+             ""); static_assert(std::is_same<decltype(line_directive(line_no + 1)), void>::value, "$call{} requires void expression"); (line_directive(line_no + 1)); _serialize.text("\n");
     }
 
     template<typename ClassData, typename Member>
@@ -63,16 +71,16 @@ struct ClassTemplate_t
       auto class_alias = member.class_name + "_t_alias";
       _serialize.text("using "); _serialize.escape(class_alias); _serialize.text(" = "); _serialize.escape(member.class_name); _serialize.text("_t<"); _serialize.escape(class_data._name); _serialize.text("_t, _data_t, _serializer_t>;"
              ""); _serialize.escape(class_alias); _serialize.text(" "); _serialize.escape(member.name); _serialize.text(" = "); _serialize.escape(class_alias); _serialize.text("{*this, data, _serialize};\n"
-             "#line "); _serialize.escape(line_no + 1); _serialize.text("\n");
+             ""); static_assert(std::is_same<decltype(line_directive(line_no + 1)), void>::value, "$call{} requires void expression"); (line_directive(line_no + 1)); _serialize.text("\n");
     }
 
     template<typename ClassData>
     void render_footer(const size_t line_no, const ClassData& class_data)
     {
-      _serialize.text("#line "); _serialize.escape(line_no); _serialize.text("\n"
+      _serialize.text(""); static_assert(std::is_same<decltype(line_directive(line_no)), void>::value, "$call{} requires void expression"); (line_directive(line_no)); _serialize.text("\n"
              "};\n"
              "\n"
-             "#line "); _serialize.escape(line_no); _serialize.text("\n"
+             ""); static_assert(std::is_same<decltype(line_directive(line_no)), void>::value, "$call{} requires void expression"); (line_directive(line_no)); _serialize.text("\n"
              "template<typename DATA_T, typename SERIALIZER_T>\n"
              "auto "); _serialize.escape(class_data._name); _serialize.text("(const DATA_T& data, SERIALIZER_T& serialize)\n"
              "  -> "); _serialize.escape(class_data._name); _serialize.text("_t<kiste::terminal_t, DATA_T, SERIALIZER_T>\n"
@@ -80,14 +88,14 @@ struct ClassTemplate_t
              "  return {kiste::terminal, data, serialize};\n"
              "}\n"
              "\n"
-             "#line "); _serialize.escape(line_no); _serialize.text("\n");
+             ""); static_assert(std::is_same<decltype(line_directive(line_no)), void>::value, "$call{} requires void expression"); (line_directive(line_no)); _serialize.text("\n");
     }
 
   // ----------------------------------------------------------------------
-#line 66
+#line 74
 };
 
-#line 66
+#line 74
 template<typename DATA_T, typename SERIALIZER_T>
 auto ClassTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   -> ClassTemplate_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -95,7 +103,7 @@ auto ClassTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   return {kiste::terminal, data, serialize};
 }
 
-#line 67
+#line 75
 }
 
 

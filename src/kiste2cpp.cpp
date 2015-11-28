@@ -368,9 +368,8 @@ auto usage(std::string reason = "") -> int
   if (not reason.empty())
     std::cerr << "ERROR: " << reason << std::endl;
 
-  std::cerr
-      << "Usage: kiste2cpp [--output OUTPUT_HEADER_FILENAME] [--report-exceptions] SOURCE_FILENAME"
-      << std::endl;
+  std::cerr << "Usage: kiste2cpp [--output OUTPUT_HEADER_FILENAME] [--report-exceptions] "
+               "[--no-line-directives] SOURCE_FILENAME" << std::endl;
   return 1;
 }
 
@@ -379,6 +378,7 @@ auto main(int argc, char** argv) -> int
   auto source_file_path = std::string{};
   auto output_file_path = std::string{};
   auto report_exceptions = false;
+  auto line_directives = true;
 
   for (int i = 1; i < argc; ++i)
   {
@@ -397,6 +397,10 @@ auto main(int argc, char** argv) -> int
     else if (std::string{argv[i]} == "--report-exceptions")
     {
       report_exceptions = true;
+    }
+    else if (std::string{argv[i]} == "--no-line-directives")
+    {
+      line_directives = false;
     }
     else if (source_file_path.empty())
     {
@@ -432,7 +436,7 @@ auto main(int argc, char** argv) -> int
     os = &ofs;
   }
 
-  auto ctx = kiste::parse_context{ifs, *os, source_file_path, report_exceptions};
+  auto ctx = kiste::parse_context{ifs, *os, source_file_path, report_exceptions, line_directives};
 
   try
   {

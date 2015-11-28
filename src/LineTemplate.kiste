@@ -96,7 +96,6 @@
           $|$call{text_segment(segment._text)}$|
           %break;
         %case segment_type::trim_trailing_return:
-          $|$call{close_string(string_opened)}$|
           %break;
         %case segment_type::escape:
           $|$call{close_string(string_opened)}$|
@@ -111,11 +110,6 @@
           $|$call{raw(segment._text)}$|
           %break;
         %}
-      %}
-      %if (line._trailing_return)
-      %{
-        $|$call{open_string(string_opened)}$|
-        $|"\n"$|
       %}
       %if (not line._next_line_starts_with_text)
       %{

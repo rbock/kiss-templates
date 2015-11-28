@@ -12,7 +12,10 @@
       %}
       $|#include <kiste/terminal.h>
 
-      $|#line 1 "${data._filename}"
+      %if (data._line_directives)
+      %{
+        $|#line 1 "${data._filename}"
+      %}
     %}
 
     %void render_footer()

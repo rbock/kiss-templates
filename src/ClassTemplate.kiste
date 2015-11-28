@@ -2,6 +2,14 @@
 %{
   $class ClassTemplate
 
+    %void line_directive(const size_t line_no)
+    %{
+      %if (data._line_directives)
+      %{
+        $|#line ${line_no}$|
+      %}
+    %}
+
     %template<typename ClassData>
     %void render_header(const size_t line_no, const ClassData& class_data)
     %{
@@ -33,7 +41,7 @@
       $|    data(data_),
       $|    _serialize(serialize)
       $|  {}
-      $|#line ${line_no + 1}
+      $|$call{line_directive(line_no + 1)}
     %}
 
     %template<typename ClassData, typename Member>
@@ -43,16 +51,16 @@
       %auto class_alias = member.class_name + "_t_alias";
       $|using ${class_alias} = ${member.class_name}_t<${class_data._name}_t, _data_t, _serializer_t>;$|
       $|${class_alias} ${member.name} = ${class_alias}{*this, data, _serialize};
-      $|#line ${line_no + 1}
+      $|$call{line_directive(line_no + 1)}
     %}
 
     %template<typename ClassData>
     %void render_footer(const size_t line_no, const ClassData& class_data)
     %{
-      $|#line ${line_no}
+      $|$call{line_directive(line_no)}
       $|};
 
-      $|#line ${line_no}
+      $|$call{line_directive(line_no)}
       $|template<typename DATA_T, typename SERIALIZER_T>
       $|auto ${class_data._name}(const DATA_T& data, SERIALIZER_T& serialize)
       $|  -> ${class_data._name}_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -60,7 +68,7 @@
       $|  return {kiste::terminal, data, serialize};
       $|}
 
-      $|#line ${line_no}
+      $|$call{line_directive(line_no)}
     %}
 
   $endclass
