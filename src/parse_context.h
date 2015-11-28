@@ -6,7 +6,7 @@
 
 namespace kiste
 {
-  struct line_t;
+  struct line_data_t;
 
   struct parse_context
   {
@@ -34,7 +34,7 @@ namespace kiste
     {
     }
 
-    auto update(const line_t& line) -> void;
+    auto update(const line_data_t& line) -> void;
   };
 
   struct parse_error : public std::runtime_error

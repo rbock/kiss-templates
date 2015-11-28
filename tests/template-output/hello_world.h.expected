@@ -21,10 +21,19 @@ struct HelloWorld_t
   {}
 #line 4
 
+  auto test() -> void
+  {
+  }
+
   auto render() -> void
   {
     _serialize.text("    Hello, world!\n"
                     "\n"
+                    "    ");static_assert(std::is_same<decltype(test()), void>::value, "$call{} requires void expression"); (test());_serialize.text("\n");
+                    );static_assert(std::is_same<decltype(test()), void>::value, "$call{} requires void expression"); (test());_serialize.text("\n"
+                    "    ");static_assert(std::is_same<decltype(test()), void>::value, "$call{} requires void expression"); (test());
+    static_assert(std::is_same<decltype(test()), void>::value, "$call{} requires void expression"); (test());
+    _serialize.text("    --");static_assert(std::is_same<decltype(test()), void>::value, "$call{} requires void expression"); (test());_serialize.text("--\n"
                     "		A$B\n"
                     "		%AB\n"
                     "AB\n"
@@ -34,10 +43,10 @@ struct HelloWorld_t
                     "");
   }
 
-#line 18
+#line 27
 };
 
-#line 18
+#line 27
 template<typename DATA_T, typename SERIALIZER_T>
 auto HelloWorld(const DATA_T& data, SERIALIZER_T& serialize)
   -> HelloWorld_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -45,7 +54,7 @@ auto HelloWorld(const DATA_T& data, SERIALIZER_T& serialize)
   return {kiste::terminal, data, serialize};
 }
 
-#line 18
+#line 27
 }
 
 

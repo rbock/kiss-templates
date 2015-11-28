@@ -3,7 +3,7 @@
 
 namespace kiste
 {
-  auto line_t::enforce_at_least_one_segment() -> void
+  auto line_data_t::enforce_at_least_one_segment() -> void
   {
     if (_segments.empty())
     {
@@ -11,7 +11,7 @@ namespace kiste
     }
   }
 
-  auto line_t::enforce_trailing_text_segment() -> void
+  auto line_data_t::enforce_trailing_text_segment() -> void
   {
     enforce_at_least_one_segment();
     if (_segments.back()._type != segment_type::text)
@@ -20,13 +20,13 @@ namespace kiste
     }
   }
 
-  auto line_t::add_character(const char c) -> void
+  auto line_data_t::add_character(const char c) -> void
   {
     enforce_trailing_text_segment();
     _segments.back()._text.push_back(c);
   }
 
-  auto line_t::add_segment(const segment_t& segment) -> size_t
+  auto line_data_t::add_segment(const segment_t& segment) -> size_t
   {
     switch (segment._type)
     {
@@ -44,7 +44,7 @@ namespace kiste
     return segment._end_pos;
   }
 
-  auto line_t::finish(const parse_context& ctx) -> void
+  line_t::line_t(const parse_context& ctx, const line_data_t& line_data) : line_data_t(line_data)
   {
     _curly_level = ctx._curly_level;
     if (_type == line_type::text)
@@ -60,8 +60,24 @@ namespace kiste
         enforce_trailing_text_segment();
         _segments.back()._text.push_back('\n');
       }
-      _trailing_return = false;
-#warning get rid of this
     }
+  }
+
+  auto line_t::ends_with_text() -> bool
+  {
+    if (_type != line_type::text)
+    {
+      return false;
+    }
+    return _segments.back()._type == segment_type::text;
+  }
+
+  auto line_t::starts_with_text() -> bool
+  {
+    if (_type != line_type::text)
+    {
+      return false;
+    }
+    return _segments.front()._type == segment_type::text;
   }
 }

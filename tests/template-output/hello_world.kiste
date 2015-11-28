@@ -2,10 +2,19 @@
 %{
   $class HelloWorld
 
+  %auto test() -> void
+  %{
+  %}
+
   %auto render() -> void
   %{
     Hello, world!
 
+    $call{test()}
+    $|$call{test()}
+    $call{test()}$|
+    $|$call{test()}$|
+    --$call{test()}--
 		A$$B
 		$%AB
 		$|AB

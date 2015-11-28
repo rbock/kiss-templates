@@ -110,12 +110,12 @@ namespace kiste
     }
   }
 
-  auto parse_text_line(const parse_context& ctx, const std::string& line) -> line_t
+  auto parse_text_line(const parse_context& ctx, const std::string& line) -> line_data_t
   {
     if (ctx._curly_level <= ctx._class_curly_level)
       throw parse_error("Unexpected text outside of member function");
 
-    auto text_line = line_t{line_type::text, {}};
+    auto text_line = line_data_t{line_type::text, {}};
     for (std::size_t pos = 0; pos < line.size(); ++pos)
     {
       switch (line.at(pos))
@@ -213,7 +213,7 @@ namespace kiste
     return cd;
   }
 
-  auto parse_line(const parse_context& ctx) -> line_t
+  auto parse_line(const parse_context& ctx) -> line_data_t
   {
     const auto pos_first_char = ctx._line.find_first_not_of(" \t");
     if (pos_first_char == ctx._line.npos)
@@ -224,7 +224,7 @@ namespace kiste
       }
       else
       {
-        return line_t{};
+        return line_data_t{};
       }
     }
     else
@@ -233,11 +233,11 @@ namespace kiste
       switch (ctx._line.at(pos_first_char))
       {
       case '%':  // cpp line
-        return line_t{line_type::cpp,
-                      std::vector<segment_t>{{0,
-                                              segment_type::cpp,
-                                              ctx._line.substr(0, pos_first_char) +
-                                                  ctx._line.substr(pos_first_char + 1)}}};
+        return line_data_t{line_type::cpp,
+                           std::vector<segment_t>{{0,
+                                                   segment_type::cpp,
+                                                   ctx._line.substr(0, pos_first_char) +
+                                                       ctx._line.substr(pos_first_char + 1)}}};
         break;
       case '$':  // opening / closing class or text line
         if (starts_with(rest, "class"))
@@ -267,32 +267,6 @@ namespace kiste
     }
   }
 
-  auto ends_with_text(const line_t& line) -> bool
-  {
-    if (line._type != line_type::text)
-    {
-      return false;
-    }
-    if (line._segments.empty())
-    {
-      return line._previous_line_ends_with_text;
-    }
-    return line._segments.back()._type == segment_type::text or line._trailing_return;
-  }
-
-  auto starts_with_text(const line_t& line) -> bool
-  {
-    if (line._type != line_type::text)
-    {
-      return false;
-    }
-    if (line._segments.empty())
-    {
-      return true;
-    }
-    return line._segments.front()._type == segment_type::text;
-  }
-
   auto parse(parse_context& ctx) -> std::vector<line_t>
   {
     auto lines = std::vector<line_t>{};
@@ -302,16 +276,16 @@ namespace kiste
       ++ctx._line_no;
       getline(ctx._is, ctx._line);
 
-      lines.push_back(parse_line(ctx));
-      auto& line = lines.back();
-      ctx.update(line);
-      line.finish(ctx);
+      const auto line_data = parse_line(ctx);
+      ctx.update(line_data);
+      lines.push_back({ctx, line_data});
 
       if (lines.size() > 2)
       {
+        auto& line = lines.at(lines.size() - 1);
         auto& previous_line = lines.at(lines.size() - 2);
-        line._previous_line_ends_with_text = ends_with_text(previous_line);
-        previous_line._next_line_starts_with_text = starts_with_text(line);
+        line._previous_line_ends_with_text = previous_line.ends_with_text();
+        previous_line._next_line_starts_with_text = line.starts_with_text();
       }
     }
     if (not lines.empty() and lines.back()._curly_level)
