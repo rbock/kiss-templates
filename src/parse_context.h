@@ -33,16 +33,6 @@ namespace kiste
 
   struct parse_error : public std::runtime_error
   {
-    std::string _filename;
-    std::string _line;
-    std::size_t _line_no = 0;
-
-    parse_error(const parse_context& ctx, const std::string& message)
-        : std::runtime_error{message},
-          _filename{ctx._filename},
-          _line{ctx._line},
-          _line_no{ctx._line_no}
-    {
-    }
+    using std::runtime_error::runtime_error;
   };
 }

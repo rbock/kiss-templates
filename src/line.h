@@ -59,6 +59,13 @@ namespace kiste
     {
     }
 
-    auto update(const parse_context& ctx) -> void;
+    auto add_character(const char c) -> void;
+    auto add_segment(const segment_t& segment) -> size_t;
+
+    auto finish(const parse_context& ctx) -> void;
+
+  private:
+    auto enforce_at_least_one_segment() -> void;
+    auto enforce_trailing_text_segment() -> void;
   };
 }

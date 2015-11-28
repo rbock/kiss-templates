@@ -31,10 +31,7 @@ namespace kiste
     return true;
   }
 
-  auto parse_expression(const parse_context& ctx,
-                        const std::string& line,
-                        segment_type type,
-                        std::size_t pos) -> segment_t
+  auto parse_expression(const std::string& line, segment_type type, std::size_t pos) -> segment_t
   {
     auto expression = std::string{};
     auto arg_curly_level = 1;
@@ -64,21 +61,20 @@ namespace kiste
     }
     if (arg_curly_level > 0)
     {
-      throw parse_error(ctx, "missing closing brace");
+      throw parse_error("missing closing brace");
     }
     --pos;
 
     return {pos, type, expression};
   }
 
-  auto parse_command(const parse_context& ctx, const std::string& line, std::size_t pos)
-      -> segment_t
+  auto parse_command(const std::string& line, std::size_t pos) -> segment_t
   {
     // std::clog << "----------------------------------" << std::endl;
     // std::clog << "line: " << line.substr(pos) << std::endl;
     if (pos == line.size())
     {
-      throw parse_error(ctx, "Missing command after '$'");
+      throw parse_error("Missing command after '$'");
     }
     else if (line.at(pos) == '$')
     {
@@ -92,32 +88,32 @@ namespace kiste
     {
       if (pos != line.size() - 1)
       {
-        throw parse_error(ctx, "Trailing characters after trim-right ($|)");
+        throw parse_error("Trailing characters after trim-right ($|)");
       }
       return {pos, segment_type::trim_trailing_return, ""};
     }
     else if (line.at(pos) == '{')
     {
-      return parse_expression(ctx, line, segment_type::escape, pos + 1);
+      return parse_expression(line, segment_type::escape, pos + 1);
     }
     else if (line.substr(pos, 4) == "raw{")
     {
-      return parse_expression(ctx, line, segment_type::raw, pos + 4);
+      return parse_expression(line, segment_type::raw, pos + 4);
     }
     else if (line.substr(pos, 5) == "call{")
     {
-      return parse_expression(ctx, line, segment_type::call, pos + 5);
+      return parse_expression(line, segment_type::call, pos + 5);
     }
     else
     {
-      throw parse_error(ctx, "Unknown command: " + line.substr(pos));
+      throw parse_error("Unknown command: " + line.substr(pos));
     }
   }
 
   auto parse_text_line(const parse_context& ctx, const std::string& line) -> line_t
   {
     if (ctx._curly_level <= ctx._class_curly_level)
-      throw parse_error(ctx, "Unexpected text outside of member function");
+      throw parse_error("Unexpected text outside of member function");
 
     auto text_line = line_t{line_type::text, {}};
     for (std::size_t pos = 0; pos < line.size(); ++pos)
@@ -126,30 +122,11 @@ namespace kiste
       {
       case '$':
       {
-        const auto segment = parse_command(ctx, line, ++pos);
-        pos = segment._end_pos;
-        if (segment._type == segment_type::text and not text_line._segments.empty() and
-            text_line._segments.back()._type == segment_type::text)
-        {
-          text_line._segments.back()._text += segment._text;
-        }
-        else
-        {
-          if (segment._type == segment_type::trim_trailing_return and text_line._segments.empty())
-          {
-            text_line._segments.push_back({pos, segment_type::text, ""});
-          }
-
-          text_line._segments.push_back(segment);
-        }
+        pos = text_line.add_segment(parse_command(line, ++pos));
         break;
       }
       default:
-        if (text_line._segments.empty() or text_line._segments.back()._type != segment_type::text)
-        {
-          text_line._segments.push_back({pos, segment_type::text, ""});
-        }
-        text_line._segments.back()._text.push_back(line.at(pos));
+        text_line.add_character(line.at(pos));
         break;
       }
     }
@@ -157,7 +134,7 @@ namespace kiste
     return text_line;
   }
 
-  auto parse_parent_class(const parse_context& ctx, const std::string& line) -> std::string
+  auto parse_parent_class(const std::string& line) -> std::string
   {
     const auto colonPos = line.find_first_not_of(" \t");
     if (colonPos == line.npos)
@@ -166,12 +143,12 @@ namespace kiste
     }
     if (line[colonPos] != ':')
     {
-      throw parse_error(ctx, "Unexpected character after class name, did you forget a ':'?");
+      throw parse_error("Unexpected character after class name, did you forget a ':'?");
     }
     const auto nameBegin = line.find_first_not_of(" \t", colonPos + 1);
     if (nameBegin == line.npos)
     {
-      throw parse_error(ctx, "Could not find parent class name");
+      throw parse_error("Could not find parent class name");
     }
     const auto nameEnd = line.find_first_of(" \t", nameBegin);
     const auto parent_name = (nameEnd == line.npos) ? line.substr(nameBegin)
@@ -179,7 +156,7 @@ namespace kiste
 
     if (nameEnd != line.npos and line.find_first_not_of(" \t", nameEnd) != line.npos)
     {
-      throw parse_error(ctx, "Unexpected trailing characters after parent class name");
+      throw parse_error("Unexpected trailing characters after parent class name");
     }
 
     return parent_name;
@@ -189,20 +166,20 @@ namespace kiste
   {
     if (not ctx._class_curly_level)
     {
-      throw parse_error(ctx, "Cannot add a member here, did you forget to call $class?");
+      throw parse_error("Cannot add a member here, did you forget to call $class?");
     }
     const auto classBegin = line.find_first_not_of(" \t", std::strlen("member"));
     if (classBegin == line.npos)
-      throw parse_error(ctx, "Could not find member class name");
+      throw parse_error("Could not find member class name");
     const auto classEnd = line.find_first_of(" \t", classBegin);
     if (classEnd == line.npos)
-      throw parse_error(ctx, "Could not find member name");
+      throw parse_error("Could not find member name");
 
     const auto member_class_name = line.substr(classBegin, classEnd - classBegin);
 
     const auto nameBegin = line.find_first_not_of(" \t", classEnd);
     if (nameBegin == line.npos)
-      throw parse_error(ctx, "Could not find member name");
+      throw parse_error("Could not find member name");
     const auto nameEnd = line.find_first_of(" \t", nameBegin);
 
     const auto member_name = (nameEnd == line.npos) ? line.substr(nameBegin)
@@ -210,7 +187,7 @@ namespace kiste
 
     if (line.find_first_not_of(" \t", nameEnd) != line.npos)
     {
-      throw parse_error(ctx, "unexpected characters after member declaration");
+      throw parse_error("unexpected characters after member declaration");
     }
 
     return {member_class_name, member_name};
@@ -219,10 +196,10 @@ namespace kiste
   auto parse_class(const parse_context& ctx, const std::string& line) -> class_t
   {
     if (ctx._class_curly_level)
-      throw parse_error(ctx, "Cannot open new class here, did you forget to call $endclass?");
+      throw parse_error("Cannot open new class here, did you forget to call $endclass?");
     const auto nameBegin = line.find_first_not_of(" \t", std::strlen("class"));
     if (nameBegin == line.npos)
-      throw parse_error(ctx, "Could not find class name");
+      throw parse_error("Could not find class name");
     const auto nameEnd = line.find_first_of(" \t", nameBegin);
 
     auto cd = class_t{};
@@ -230,7 +207,7 @@ namespace kiste
                                       : line.substr(nameBegin, nameEnd - nameBegin);
     if (nameEnd != line.npos)
     {
-      cd._parent_name = parse_parent_class(ctx, line.substr(nameEnd));
+      cd._parent_name = parse_parent_class(line.substr(nameEnd));
     };
 
     return cd;
@@ -328,7 +305,7 @@ namespace kiste
       lines.push_back(parse_line(ctx));
       auto& line = lines.back();
       ctx.update(line);
-      line.update(ctx);
+      line.finish(ctx);
 
       if (lines.size() > 2)
       {
@@ -339,7 +316,7 @@ namespace kiste
     }
     if (not lines.empty() and lines.back()._curly_level)
     {
-      throw parse_error(ctx, "not enough closing curly braces");
+      throw parse_error("not enough closing curly braces");
     }
 
     return lines;
@@ -467,7 +444,7 @@ auto main(int argc, char** argv) -> int
     std::cerr << "Parse error in file: " << ctx._filename << std::endl;
     std::cerr << "Line number: " << ctx._line_no << std::endl;
     std::cerr << "Message: " << e.what() << std::endl;
-    std::cerr << "Line: " << e._line << std::endl;
+    std::cerr << "Line: " << ctx._line << std::endl;
     return 1;
   }
 }

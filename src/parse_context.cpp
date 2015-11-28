@@ -17,7 +17,7 @@ namespace kiste
           break;
         case '}':
           if (level == 0)
-            throw parse_error(ctx, "Too many closing curly braces in C++");
+            throw parse_error("Too many closing curly braces in C++");
           --level;
           break;
         default:
