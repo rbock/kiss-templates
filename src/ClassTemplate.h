@@ -54,7 +54,7 @@ struct ClassTemplate_t
              "    _serialize(serialize)\n"
              "  {}\n"
              "  // ----------------------------------------------------------------------\n"
-             "#line "); _serialize.escape(data.line_no + 1); _serialize.text("\n");
+             "#line "); _serialize.escape(data._line_no + 1); _serialize.text("\n");
     }
 
     template<typename ClassData, typename Member>
@@ -70,10 +70,10 @@ struct ClassTemplate_t
     void render_footer(const ClassData& class_data)
     {
       _serialize.text("  // ----------------------------------------------------------------------\n"
-             "#line "); _serialize.escape(data.line_no); _serialize.text("\n"
+             "#line "); _serialize.escape(data._line_no); _serialize.text("\n"
              "};\n"
              "\n"
-             "#line "); _serialize.escape(data.line_no); _serialize.text("\n"
+             "#line "); _serialize.escape(data._line_no); _serialize.text("\n"
              "template<typename DATA_T, typename SERIALIZER_T>\n"
              "auto "); _serialize.escape(class_data.name); _serialize.text("(const DATA_T& data, SERIALIZER_T& serialize)\n"
              "  -> "); _serialize.escape(class_data.name); _serialize.text("_t<kiste::terminal_t, DATA_T, SERIALIZER_T>\n"
@@ -81,7 +81,7 @@ struct ClassTemplate_t
              "  return {kiste::terminal, data, serialize};\n"
              "}\n"
              "\n"
-             "#line "); _serialize.escape(data.line_no + 1); _serialize.text("\n");
+             "#line "); _serialize.escape(data._line_no + 1); _serialize.text("\n");
     }
 
   // ----------------------------------------------------------------------

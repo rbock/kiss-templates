@@ -34,7 +34,7 @@
       $|    _serialize(serialize)
       $|  {}
       $|  // ----------------------------------------------------------------------
-      $|#line ${data.line_no + 1}
+      $|#line ${data._line_no + 1}
     %}
 
     %template<typename ClassData, typename Member>
@@ -50,10 +50,10 @@
     %void render_footer(const ClassData& class_data)
     %{
       $|  // ----------------------------------------------------------------------
-      $|#line ${data.line_no}
+      $|#line ${data._line_no}
       $|};
 
-      $|#line ${data.line_no}
+      $|#line ${data._line_no}
       $|template<typename DATA_T, typename SERIALIZER_T>
       $|auto ${class_data.name}(const DATA_T& data, SERIALIZER_T& serialize)
       $|  -> ${class_data.name}_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -61,7 +61,7 @@
       $|  return {kiste::terminal, data, serialize};
       $|}
 
-      $|#line ${data.line_no + 1}
+      $|#line ${data._line_no + 1}
     %}
 
   $endclass

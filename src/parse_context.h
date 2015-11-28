@@ -10,35 +10,38 @@ namespace kiste
 
   struct parse_context
   {
-    std::istream& is;
-    std::ostream& os;
-    std::string filename;
-    bool report_exceptions = false;
-    std::string line;
-    std::size_t line_no = 0;
-    std::size_t curly_level = 0;
-    std::size_t class_curly_level = 0;
-    bool has_trailing_return = false;
+    std::istream& _is;
+    std::ostream& _os;
+    std::string _filename;
+    bool _report_exceptions = false;
+    std::string _line;
+    std::size_t _line_no = 0;
+    std::size_t _curly_level = 0;
+    std::size_t _class_curly_level = 0;
+    bool _has_trailing_return = false;
 
-    parse_context(std::istream& is_,
-                  std::ostream& os_,
-                  const std::string& filename_,
-                  bool report_exceptions_)
-        : is(is_), os(os_), filename{filename_}, report_exceptions{report_exceptions_}
+    parse_context(std::istream& is,
+                  std::ostream& os,
+                  const std::string& filename,
+                  bool report_exceptions)
+        : _is(is), _os(os), _filename{filename}, _report_exceptions{report_exceptions}
     {
     }
 
-    auto update(const line_t& l) -> void;
+    auto update(const line_t& line) -> void;
   };
 
   struct parse_error : public std::runtime_error
   {
-    std::string filename;
-    std::string line;
-    std::size_t line_no = 0;
+    std::string _filename;
+    std::string _line;
+    std::size_t _line_no = 0;
 
     parse_error(const parse_context& ctx, const std::string& message)
-        : std::runtime_error{message}, filename{ctx.filename}, line{ctx.line}, line_no{ctx.line_no}
+        : std::runtime_error{message},
+          _filename{ctx._filename},
+          _line{ctx._line},
+          _line_no{ctx._line_no}
     {
     }
   };

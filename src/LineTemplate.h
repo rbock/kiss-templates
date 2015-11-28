@@ -27,7 +27,7 @@ struct LineTemplate_t
 
     void open_exception_handling()
     {
-      if (data.report_exceptions)
+      if (data._report_exceptions)
       {
         _serialize.text("try"
                "{");
@@ -36,7 +36,7 @@ struct LineTemplate_t
 
     void close_exception_handling(const std::string& expression)
     {
-      if (data.report_exceptions)
+      if (data._report_exceptions)
       {
         _serialize.text("}"
                "catch(...)"
@@ -62,9 +62,9 @@ struct LineTemplate_t
 
     void call(const std::string& expression)
     {
-      _serialize.text("      "); static_assert(std::is_same<decltype(open_exception_handling()), void>::value, "$call{} requires void expression"); (open_exception_handling()); _serialize.text("\n"
-             "static_assert(std::is_same<decltype("); _serialize.raw(expression); _serialize.text("), void>::value, \"$call{} requires void expression\"); ("); _serialize.raw(expression); _serialize.text("); "
-             "      "); static_assert(std::is_same<decltype(close_exception_handling(expression)), void>::value, "$call{} requires void expression"); (close_exception_handling(expression)); _serialize.text("\n");
+      _serialize.text(""); static_assert(std::is_same<decltype(open_exception_handling()), void>::value, "$call{} requires void expression"); (open_exception_handling()); _serialize.text(""
+             "static_assert(std::is_same<decltype("); _serialize.raw(expression); _serialize.text("), void>::value, \"$call{} requires void expression\"); ("); _serialize.raw(expression); _serialize.text(");"
+             ""); static_assert(std::is_same<decltype(close_exception_handling(expression)), void>::value, "$call{} requires void expression"); (close_exception_handling(expression)); _serialize.text("");
     }
 
     void open_string(bool& string_opened)
@@ -98,7 +98,7 @@ struct LineTemplate_t
     template<typename Line>
     void render_text(const Line& line)
     {
-      auto string_opened = (line.previous_type == line_type::text);
+      auto string_opened = line.previous_line_ends_with_text;
       for (const auto& segment : line.commands)
       {
         switch(segment.type)
@@ -124,7 +124,7 @@ struct LineTemplate_t
           break;
         }
       }
-      if (line.next_type != line_type::text)
+      if (not line.next_line_starts_with_text)
       {
         _serialize.text(""); static_assert(std::is_same<decltype(close_string(string_opened)), void>::value, "$call{} requires void expression"); (close_string(string_opened)); _serialize.text("");
       }

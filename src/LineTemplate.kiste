@@ -7,7 +7,7 @@
 
     %void open_exception_handling()
     %{
-      %if (data.report_exceptions)
+      %if (data._report_exceptions)
       %{
         $|try$|
         $|{$|
@@ -16,7 +16,7 @@
 
     %void close_exception_handling(const std::string& expression)
     %{
-      %if (data.report_exceptions)
+      %if (data._report_exceptions)
       %{
         $|}$|
         $|catch(...)$|
@@ -42,9 +42,9 @@
 
     %void call(const std::string& expression)
     %{
-      $call{open_exception_handling()}
-      $|static_assert(std::is_same<decltype($raw{expression}), void>::value, "$$call{} requires void expression"); ($raw{expression}); $|
-      $call{close_exception_handling(expression)}
+      $|$call{open_exception_handling()}$|
+      $|static_assert(std::is_same<decltype($raw{expression}), void>::value, "$$call{} requires void expression"); ($raw{expression});$|
+      $|$call{close_exception_handling(expression)}$|
     %}
 
     %void open_string(bool& string_opened)
@@ -78,7 +78,7 @@
     %template<typename Line>
     %void render_text(const Line& line)
     %{
-      %auto string_opened = (line.previous_type == line_type::text);
+      %auto string_opened = line.previous_line_ends_with_text;
       %for (const auto& segment : line.commands)
       %{
         %switch(segment.type)
@@ -104,7 +104,7 @@
           %break;
         %}
       %}
-      %if (line.next_type != line_type::text)
+      %if (not line.next_line_starts_with_text)
       %{
         $|$call{close_string(string_opened)}$|
       %}

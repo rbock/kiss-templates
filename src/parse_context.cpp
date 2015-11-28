@@ -7,8 +7,8 @@ namespace kiste
   {
     auto determine_curly_level(const parse_context& ctx) -> std::size_t
     {
-      auto level = ctx.curly_level;
-      for (const auto& c : ctx.line)
+      auto level = ctx._curly_level;
+      for (const auto& c : ctx._line)
       {
         switch (c)
         {
@@ -32,11 +32,11 @@ namespace kiste
       switch (line.type)
       {
       case line_type::class_begin:
-        return ctx.curly_level;
+        return ctx._curly_level;
       case line_type::class_end:
         return 0;
       default:
-        return ctx.class_curly_level;
+        return ctx._class_curly_level;
       }
     }
 
@@ -51,10 +51,10 @@ namespace kiste
     }
   }
 
-  auto parse_context::update(const line_t& l) -> void
+  auto parse_context::update(const line_t& line) -> void
   {
-    curly_level = determine_curly_level(*this);
-    class_curly_level = determine_class_curly_level(*this, l);
-    has_trailing_return = ::kiste::has_trailing_return(l);
+    _curly_level = determine_curly_level(*this);
+    _class_curly_level = determine_class_curly_level(*this, line);
+    _has_trailing_return = ::kiste::has_trailing_return(line);
   }
 }

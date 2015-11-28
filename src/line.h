@@ -31,9 +31,9 @@ namespace kiste
   struct line_t
   {
     std::size_t curly_level = 0;
-    line_type previous_type = line_type::none;
+    bool previous_line_ends_with_text = false;
     line_type type = line_type::none;
-    line_type next_type = line_type::none;
+    bool next_line_starts_with_text = false;
     bool trailing_return = false;
     // depending on the type, one of the following members is to be used
     std::vector<command_t> commands;
