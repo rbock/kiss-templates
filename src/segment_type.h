@@ -2,7 +2,7 @@
 
 namespace kiste
 {
-  enum class command_type
+  enum class segment_type
   {
     cpp,
     text,

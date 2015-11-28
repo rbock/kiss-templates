@@ -29,7 +29,7 @@ namespace kiste
 
     auto determine_class_curly_level(const parse_context& ctx, const line_t& line) -> std::size_t
     {
-      switch (line.type)
+      switch (line._type)
       {
       case line_type::class_begin:
         return ctx._curly_level;
@@ -42,8 +42,8 @@ namespace kiste
 
     auto has_trailing_return(const line_t& line) -> bool
     {
-      if (line.type == line_type::text and not line.commands.empty() and
-          line.commands.back().type == command_type::trim_trailing_return)
+      if (line._type == line_type::text and not line._segments.empty() and
+          line._segments.back()._type == segment_type::trim_trailing_return)
       {
         return false;
       }

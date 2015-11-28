@@ -19,25 +19,25 @@ struct HelloWorld_t
     data(data_),
     _serialize(serialize)
   {}
-  // ----------------------------------------------------------------------
 #line 4
 
   auto render() -> void
   {
-      _serialize.text("    Hello, world!\n"
-             "\n"
-             "		A$B\n"
-             "		%AB\n"
-             "AB\n"
-             "		AB"
-             "AB");
+    _serialize.text("    Hello, world!\n"
+                    "\n"
+                    "		A$B\n"
+                    "		%AB\n"
+                    "AB\n"
+                    "		AB"
+                    ""
+                    "AB"
+                    "");
   }
 
-  // ----------------------------------------------------------------------
-#line 16
+#line 18
 };
 
-#line 16
+#line 18
 template<typename DATA_T, typename SERIALIZER_T>
 auto HelloWorld(const DATA_T& data, SERIALIZER_T& serialize)
   -> HelloWorld_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -45,7 +45,7 @@ auto HelloWorld(const DATA_T& data, SERIALIZER_T& serialize)
   return {kiste::terminal, data, serialize};
 }
 
-#line 17
+#line 18
 }
 
 

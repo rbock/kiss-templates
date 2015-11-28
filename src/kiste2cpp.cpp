@@ -5,7 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include "command_type.h"
+#include "segment_type.h"
 #include "KisteTemplate.h"
 #include "ClassTemplate.h"
 #include "LineTemplate.h"
@@ -33,8 +33,8 @@ namespace kiste
 
   auto parse_expression(const parse_context& ctx,
                         const std::string& line,
-                        command_type type,
-                        std::size_t pos) -> command_t
+                        segment_type type,
+                        std::size_t pos) -> segment_t
   {
     auto expression = std::string{};
     auto arg_curly_level = 1;
@@ -72,7 +72,7 @@ namespace kiste
   }
 
   auto parse_command(const parse_context& ctx, const std::string& line, std::size_t pos)
-      -> command_t
+      -> segment_t
   {
     // std::clog << "----------------------------------" << std::endl;
     // std::clog << "line: " << line.substr(pos) << std::endl;
@@ -82,11 +82,11 @@ namespace kiste
     }
     else if (line.at(pos) == '$')
     {
-      return {pos, command_type::text, "$"};
+      return {pos, segment_type::text, "$"};
     }
     else if (line.at(pos) == '%')
     {
-      return {pos, command_type::text, "%"};
+      return {pos, segment_type::text, "%"};
     }
     else if (line.at(pos) == '|')
     {
@@ -94,19 +94,19 @@ namespace kiste
       {
         throw parse_error(ctx, "Trailing characters after trim-right ($|)");
       }
-      return {pos, command_type::trim_trailing_return, ""};
+      return {pos, segment_type::trim_trailing_return, ""};
     }
     else if (line.at(pos) == '{')
     {
-      return parse_expression(ctx, line, command_type::escape, pos + 1);
+      return parse_expression(ctx, line, segment_type::escape, pos + 1);
     }
     else if (line.substr(pos, 4) == "raw{")
     {
-      return parse_expression(ctx, line, command_type::raw, pos + 4);
+      return parse_expression(ctx, line, segment_type::raw, pos + 4);
     }
     else if (line.substr(pos, 5) == "call{")
     {
-      return parse_expression(ctx, line, command_type::call, pos + 5);
+      return parse_expression(ctx, line, segment_type::call, pos + 5);
     }
     else
     {
@@ -119,26 +119,42 @@ namespace kiste
     if (ctx._curly_level <= ctx._class_curly_level)
       throw parse_error(ctx, "Unexpected text outside of member function");
 
-    auto commands = std::vector<command_t>{};
+    auto text_line = line_t{line_type::text, {}};
     for (std::size_t pos = 0; pos < line.size(); ++pos)
     {
       switch (line.at(pos))
       {
       case '$':
-        commands.push_back(parse_command(ctx, line, ++pos));
-        pos = commands.back().end_pos;
-        break;
-      default:
-        if (commands.empty() or commands.back().type != command_type::text)
+      {
+        const auto segment = parse_command(ctx, line, ++pos);
+        pos = segment._end_pos;
+        if (segment._type == segment_type::text and not text_line._segments.empty() and
+            text_line._segments.back()._type == segment_type::text)
         {
-          commands.push_back({pos, command_type::text, ""});
+          text_line._segments.back()._text += segment._text;
         }
-        commands.back().text.push_back(line.at(pos));
+        else
+        {
+          if (segment._type == segment_type::trim_trailing_return and text_line._segments.empty())
+          {
+            text_line._segments.push_back({pos, segment_type::text, ""});
+          }
+
+          text_line._segments.push_back(segment);
+        }
+        break;
+      }
+      default:
+        if (text_line._segments.empty() or text_line._segments.back()._type != segment_type::text)
+        {
+          text_line._segments.push_back({pos, segment_type::text, ""});
+        }
+        text_line._segments.back()._text.push_back(line.at(pos));
         break;
       }
     }
 
-    return line_t{line_type::text, commands};
+    return text_line;
   }
 
   auto parse_parent_class(const parse_context& ctx, const std::string& line) -> std::string
@@ -210,11 +226,11 @@ namespace kiste
     const auto nameEnd = line.find_first_of(" \t", nameBegin);
 
     auto cd = class_t{};
-    cd.name = (nameEnd == line.npos) ? line.substr(nameBegin)
-                                     : line.substr(nameBegin, nameEnd - nameBegin);
+    cd._name = (nameEnd == line.npos) ? line.substr(nameBegin)
+                                      : line.substr(nameBegin, nameEnd - nameBegin);
     if (nameEnd != line.npos)
     {
-      cd.parent_name = parse_parent_class(ctx, line.substr(nameEnd));
+      cd._parent_name = parse_parent_class(ctx, line.substr(nameEnd));
     };
 
     return cd;
@@ -241,8 +257,8 @@ namespace kiste
       {
       case '%':  // cpp line
         return line_t{line_type::cpp,
-                      std::vector<command_t>{{0,
-                                              command_type::cpp,
+                      std::vector<segment_t>{{0,
+                                              segment_type::cpp,
                                               ctx._line.substr(0, pos_first_char) +
                                                   ctx._line.substr(pos_first_char + 1)}}};
         break;
@@ -276,28 +292,28 @@ namespace kiste
 
   auto ends_with_text(const line_t& line) -> bool
   {
-    if (line.type != line_type::text)
+    if (line._type != line_type::text)
     {
       return false;
     }
-    if (line.commands.empty())
+    if (line._segments.empty())
     {
-      return line.previous_line_ends_with_text;
+      return line._previous_line_ends_with_text;
     }
-    return line.commands.back().type == command_type::text;
+    return line._segments.back()._type == segment_type::text or line._trailing_return;
   }
 
   auto starts_with_text(const line_t& line) -> bool
   {
-    if (line.type != line_type::text)
+    if (line._type != line_type::text)
     {
       return false;
     }
-    if (line.commands.empty())
+    if (line._segments.empty())
     {
       return true;
     }
-    return line.commands.front().type == command_type::text;
+    return line._segments.front()._type == segment_type::text;
   }
 
   auto parse(parse_context& ctx) -> std::vector<line_t>
@@ -317,11 +333,11 @@ namespace kiste
       if (lines.size() > 2)
       {
         auto& previous_line = lines.at(lines.size() - 2);
-        line.previous_line_ends_with_text = ends_with_text(previous_line);
-        previous_line.next_line_starts_with_text = starts_with_text(line);
+        line._previous_line_ends_with_text = ends_with_text(previous_line);
+        previous_line._next_line_starts_with_text = starts_with_text(line);
       }
     }
-    if (not lines.empty() and lines.back().curly_level)
+    if (not lines.empty() and lines.back()._curly_level)
     {
       throw parse_error(ctx, "not enough closing curly braces");
     }
@@ -339,9 +355,11 @@ namespace kiste
     auto class_data = class_t{};
 
     kissTemplate.render_header();
+    auto line_no = std::size_t{0};
     for (const auto& line : lines)
     {
-      switch (line.type)
+      ++line_no;
+      switch (line._type)
       {
       case line_type::none:
         lineTemplate.render_none();
@@ -353,14 +371,14 @@ namespace kiste
         lineTemplate.render_text(line);
         break;
       case line_type::class_begin:
-        class_data = line.class_data;
-        classTemplate.render_header(class_data);
+        class_data = line._class_data;
+        classTemplate.render_header(line_no, class_data);
         break;
       case line_type::member:
-        classTemplate.render_member(class_data, line.member);
+        classTemplate.render_member(line_no, class_data, line._member);
         break;
       case line_type::class_end:
-        classTemplate.render_footer(class_data);
+        classTemplate.render_footer(line_no, class_data);
         break;
       }
     }

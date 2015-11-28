@@ -3,7 +3,7 @@
 #include <kiste/terminal.h>
 
 #line 1 "../src/LineTemplate.kiste"
-#include "command_type.h"
+#include "segment_type.h"
 #include "line_type.h"
 
 namespace kiste
@@ -29,8 +29,8 @@ struct LineTemplate_t
     {
       if (data._report_exceptions)
       {
-        _serialize.text("try"
-               "{");
+        _serialize.text(" try"
+               " { ");
       }
     }
 
@@ -38,25 +38,25 @@ struct LineTemplate_t
     {
       if (data._report_exceptions)
       {
-        _serialize.text("}"
-               "catch(...)"
-               "{"
-               "  _serialize.report_exception(__LINE__, \""); _serialize.escape(expression); _serialize.text("\", std::current_exception());"
-               "}");
+        _serialize.text(" }"
+               " catch(...)"
+               " {"
+               " _serialize.report_exception(__LINE__, \""); _serialize.escape(expression); _serialize.text("\", std::current_exception());"
+               " } ");
       }
     }
 
     void escape(const std::string& expression)
     {
       _serialize.text(""); static_assert(std::is_same<decltype(open_exception_handling()), void>::value, "$call{} requires void expression"); (open_exception_handling()); _serialize.text(""
-             " _serialize.escape("); _serialize.raw(expression); _serialize.text("); "
+             "_serialize.escape("); _serialize.raw(expression); _serialize.text(");"
              ""); static_assert(std::is_same<decltype(close_exception_handling(expression)), void>::value, "$call{} requires void expression"); (close_exception_handling(expression)); _serialize.text("");
     }
 
     void raw(const std::string& expression)
     {
       _serialize.text(""); static_assert(std::is_same<decltype(open_exception_handling()), void>::value, "$call{} requires void expression"); (open_exception_handling()); _serialize.text(""
-             " _serialize.raw("); _serialize.raw(expression); _serialize.text("); "
+             "_serialize.raw("); _serialize.raw(expression); _serialize.text(");"
              ""); static_assert(std::is_same<decltype(close_exception_handling(expression)), void>::value, "$call{} requires void expression"); (close_exception_handling(expression)); _serialize.text("");
     }
 
@@ -98,65 +98,63 @@ struct LineTemplate_t
     template<typename Line>
     void render_text(const Line& line)
     {
-      auto string_opened = line.previous_line_ends_with_text;
-      for (const auto& segment : line.commands)
+      for (std::size_t i = 0; i < line._curly_level; ++i)
       {
-        switch(segment.type)
+        _serialize.text("  ");
+      }
+      auto string_opened = line._previous_line_ends_with_text;
+      if (string_opened)
+      {
+        _serialize.text("                ");
+      }
+      for (const auto& segment : line._segments)
+      {
+        switch(segment._type)
         {
-        case command_type::text:
+        case segment_type::text:
           _serialize.text(""); static_assert(std::is_same<decltype(open_string(string_opened)), void>::value, "$call{} requires void expression"); (open_string(string_opened)); _serialize.text(""
-                 ""); static_assert(std::is_same<decltype(text_segment(segment.text)), void>::value, "$call{} requires void expression"); (text_segment(segment.text)); _serialize.text("");
+                 ""); static_assert(std::is_same<decltype(text_segment(segment._text)), void>::value, "$call{} requires void expression"); (text_segment(segment._text)); _serialize.text("");
           break;
-        case command_type::trim_trailing_return:
+        case segment_type::trim_trailing_return:
           _serialize.text(""); static_assert(std::is_same<decltype(close_string(string_opened)), void>::value, "$call{} requires void expression"); (close_string(string_opened)); _serialize.text("");
           break;
-        case command_type::escape:
+        case segment_type::escape:
           _serialize.text(""); static_assert(std::is_same<decltype(close_string(string_opened)), void>::value, "$call{} requires void expression"); (close_string(string_opened)); _serialize.text(""
-                 ""); static_assert(std::is_same<decltype(escape(segment.text)), void>::value, "$call{} requires void expression"); (escape(segment.text)); _serialize.text("");
+                 ""); static_assert(std::is_same<decltype(escape(segment._text)), void>::value, "$call{} requires void expression"); (escape(segment._text)); _serialize.text("");
           break;
-        case command_type::call:
+        case segment_type::call:
           _serialize.text(""); static_assert(std::is_same<decltype(close_string(string_opened)), void>::value, "$call{} requires void expression"); (close_string(string_opened)); _serialize.text(""
-                 ""); static_assert(std::is_same<decltype(call(segment.text)), void>::value, "$call{} requires void expression"); (call(segment.text)); _serialize.text("");
+                 ""); static_assert(std::is_same<decltype(call(segment._text)), void>::value, "$call{} requires void expression"); (call(segment._text)); _serialize.text("");
           break;
-        case command_type::raw:
+        case segment_type::raw:
           _serialize.text(""); static_assert(std::is_same<decltype(close_string(string_opened)), void>::value, "$call{} requires void expression"); (close_string(string_opened)); _serialize.text(""
-                 ""); static_assert(std::is_same<decltype(raw(segment.text)), void>::value, "$call{} requires void expression"); (raw(segment.text)); _serialize.text("");
+                 ""); static_assert(std::is_same<decltype(raw(segment._text)), void>::value, "$call{} requires void expression"); (raw(segment._text)); _serialize.text("");
           break;
         }
       }
-      if (not line.next_line_starts_with_text)
+      if (line._trailing_return)
+      {
+        _serialize.text(""); static_assert(std::is_same<decltype(open_string(string_opened)), void>::value, "$call{} requires void expression"); (open_string(string_opened)); _serialize.text(""
+               "\"\\n\"");
+      }
+      if (not line._next_line_starts_with_text)
       {
         _serialize.text(""); static_assert(std::is_same<decltype(close_string(string_opened)), void>::value, "$call{} requires void expression"); (close_string(string_opened)); _serialize.text("");
       }
-      if (line.trailing_return)
-      {
-        _serialize.text("\n");
-      }
+      _serialize.text("\n");
     }
 
     template<typename Line>
     void render_cpp(const Line& line)
     {
-      _serialize.text(""); _serialize.raw(line.commands[0].text); _serialize.text("\n");
+      _serialize.text(""); _serialize.raw(line._segments[0]._text); _serialize.text("\n");
     }
 
- void old_code()
- {
-      /*
-      _serialize.text("    //ctx.open_text();\n"
-             "    //ctx.os << \"  \";\n"
-             "    //for (std::size_t i = 0; i < ctx.curly_level; ++i)\n"
-             "    //{\n"
-             "      //ctx.os << \"  \";\n"
-             "    //}\n");
-    */
-      _serialize.text("\n");
- }
   // ----------------------------------------------------------------------
-#line 135
+#line 133
 };
 
-#line 135
+#line 133
 template<typename DATA_T, typename SERIALIZER_T>
 auto LineTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   -> LineTemplate_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
@@ -164,7 +162,7 @@ auto LineTemplate(const DATA_T& data, SERIALIZER_T& serialize)
   return {kiste::terminal, data, serialize};
 }
 
-#line 136
+#line 134
 }
 
 

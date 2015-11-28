@@ -20,15 +20,13 @@ struct HelloWorld_t
     data(data_),
     _serialize(serialize)
   {}
-  // ----------------------------------------------------------------------
 #line 4
 
   auto render() -> void
   {
-      _serialize.text("    Hello, "); try { _serialize.escape("any expression"); } catch(...) {_serialize.report_exception(__LINE__, "\"any expression\"", std::current_exception()); } _serialize.text("!\n");
+    _serialize.text("    Hello, "); try { _serialize.escape("any expression"); } catch(...) { _serialize.report_exception(__LINE__, "\"any expression\"", std::current_exception()); } _serialize.text("!\n");
   }
 
-  // ----------------------------------------------------------------------
 #line 10
 };
 
@@ -40,7 +38,7 @@ auto HelloWorld(const DATA_T& data, SERIALIZER_T& serialize)
   return {kiste::terminal, data, serialize};
 }
 
-#line 11
+#line 10
 }
 
 
