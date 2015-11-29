@@ -6,9 +6,9 @@
 #include <vector>
 #include <string>
 #include "segment_type.h"
-#include "KisteTemplate.h"
-#include "ClassTemplate.h"
-#include "LineTemplate.h"
+#include <KisteTemplate.h>
+#include <ClassTemplate.h>
+#include <LineTemplate.h>
 #include "parse_context.h"
 #include "line.h"
 #include <kiste/cpp.h>

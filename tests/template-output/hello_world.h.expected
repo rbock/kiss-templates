@@ -30,7 +30,7 @@ struct HelloWorld_t
     _serialize.text("    Hello, world!\n"
                     "\n"
                     "    ");static_assert(std::is_same<decltype(test()), void>::value, "$call{} requires void expression"); (test());_serialize.text("\n");
-                    );static_assert(std::is_same<decltype(test()), void>::value, "$call{} requires void expression"); (test());_serialize.text("\n"
+    static_assert(std::is_same<decltype(test()), void>::value, "$call{} requires void expression"); (test());_serialize.text("\n"
                     "    ");static_assert(std::is_same<decltype(test()), void>::value, "$call{} requires void expression"); (test());
     static_assert(std::is_same<decltype(test()), void>::value, "$call{} requires void expression"); (test());
     _serialize.text("    --");static_assert(std::is_same<decltype(test()), void>::value, "$call{} requires void expression"); (test());_serialize.text("--\n"

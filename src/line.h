@@ -73,7 +73,7 @@ namespace kiste
 
     line_t(const parse_context& ctx, const line_data_t& line_data);
 
-    auto ends_with_text() -> bool;
-    auto starts_with_text() -> bool;
+    auto ends_with_text() const -> bool;
+    auto starts_with_text() const -> bool;
   };
 }

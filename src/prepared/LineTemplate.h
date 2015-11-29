@@ -102,7 +102,7 @@ struct LineTemplate_t
       {
         _serialize.text("  ");
       }
-      auto string_opened = line._previous_line_ends_with_text;
+      auto string_opened = line.starts_with_text() && line._previous_line_ends_with_text;
       if (string_opened)
       {
         _serialize.text("                ");

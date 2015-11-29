@@ -63,7 +63,7 @@ namespace kiste
     }
   }
 
-  auto line_t::ends_with_text() -> bool
+  auto line_t::ends_with_text() const -> bool
   {
     if (_type != line_type::text)
     {
@@ -72,7 +72,7 @@ namespace kiste
     return _segments.back()._type == segment_type::text;
   }
 
-  auto line_t::starts_with_text() -> bool
+  auto line_t::starts_with_text() const -> bool
   {
     if (_type != line_type::text)
     {

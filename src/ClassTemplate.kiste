@@ -17,7 +17,7 @@
       $|struct ${class_data._name}_t
       %if (!class_data._parent_name.empty())
       %{
-      $|   : public ${class_data._parent_name}_t<${class_data._name}_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>
+      $|  : public ${class_data._parent_name}_t<${class_data._name}_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>
       %}
       $|{
       %if (!class_data._parent_name.empty())

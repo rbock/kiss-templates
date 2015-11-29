@@ -37,7 +37,7 @@ struct ClassTemplate_t
              "struct "); _serialize.escape(class_data._name); _serialize.text("_t\n");
       if (!class_data._parent_name.empty())
       {
-        _serialize.text("   : public "); _serialize.escape(class_data._parent_name); _serialize.text("_t<"); _serialize.escape(class_data._name); _serialize.text("_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>\n");
+        _serialize.text("  : public "); _serialize.escape(class_data._parent_name); _serialize.text("_t<"); _serialize.escape(class_data._name); _serialize.text("_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>\n");
       }
       _serialize.text("{\n");
       if (!class_data._parent_name.empty())
@@ -51,7 +51,7 @@ struct ClassTemplate_t
              "  using _serializer_t = SERIALIZER_T;\n"
              "  _serializer_t& _serialize;\n"
              "\n"
-             "  "); _serialize.escape(class_data._name); _serialize.text("_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):\n");
+             "    "); _serialize.escape(class_data._name); _serialize.text("_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):\n");
       if (!class_data._parent_name.empty())
       {
         _serialize.text("    _parent_t{*this, data_, serialize},\n"
