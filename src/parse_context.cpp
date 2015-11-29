@@ -24,6 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <ciso646>  // Make MSCV understand and/or/not
 #include "parse_context.h"
 #include "line.h"
 
