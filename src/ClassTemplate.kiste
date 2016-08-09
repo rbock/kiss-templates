@@ -86,13 +86,17 @@
       $|$call{line_directive(line_no)}
       $|};
 
-      $|$call{line_directive(line_no)}
-      $|template<typename DATA_T, typename SERIALIZER_T>
-      $|auto ${class_data._name}(const DATA_T& data, SERIALIZER_T& serialize)
-      $|  -> ${class_data._name}_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
+      $|struct ${class_data._name}_generator
       $|{
-      $|  return {kiste::terminal, data, serialize};
-      $|}
+      $|  $call{line_directive(line_no)}
+      $|  template<typename DATA_T, typename SERIALIZER_T>
+      $|  auto operator()(const DATA_T& data, SERIALIZER_T& serialize) const
+      $|    -> ${class_data._name}_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
+      $|  {
+      $|    return {kiste::terminal, data, serialize};
+      $|  }
+      $|};
+      $|constexpr auto ${class_data._name} = ${class_data._name}_generator{};
 
       $|$call{line_directive(line_no)}
     %}
