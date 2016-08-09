@@ -1,13 +1,13 @@
 " Vim syntax file
 " Language: Kiss-Templates
+" Copy to $HOME/.vim/syntax/kiste.vim
 
 if exists("b:current_syntax")
   finish
 endif
 
 syn match basicLanguageKeywords "\$\(class\|endclass\|member\|\$\||\)"
-syn match cpp "^ *%.*$"
-syn match cpp "^ *%.*$"
+syn match cpp "^\s*%.*$"
 syn region escape oneline start='\${' end='\}'
 syn region raw oneline start='\$raw{' end='\}'
 syn region call oneline start='\$call{' end='\}'
