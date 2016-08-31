@@ -29,6 +29,8 @@
 
 #include <ostream>
 
+#include <kiste/raw_type.h>
+
 namespace kiste
 {
   class cpp
@@ -81,6 +83,21 @@ namespace kiste
     auto escape(const T& t) -> void
     {
       _os << t;
+    }
+
+    template <typename T>
+    auto escape(const raw_t<T>& r) -> void
+    {
+      _os << r._t;
+    }
+
+    template <typename T>
+    auto escape(const conditionally_raw_t<T>& cr) -> void
+    {
+      if (cr._isRaw)
+        _os << cr._t;
+      else
+        escape(cr._t);
     }
 
     template <typename T,

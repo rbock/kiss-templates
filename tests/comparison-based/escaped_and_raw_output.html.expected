@@ -1,1 +1,9 @@
 <a href="&lt;test&#39;:_:&#39;me&quot;&gt;" class="mycssclass">Link</a>
+
+<table>
+<tr><td>escaped &gt; value</td></tr>
+<tr><td><b>unescaped value</b></td></tr>
+<tr><td><i>another unescaped value</i></td></tr>
+</table>
+
+<p>raw paragraph</p>
