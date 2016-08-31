@@ -26,6 +26,8 @@
 
 %namespace test
 %{
+%namespace widgets
+%{
   $class Helper
   %auto getAnswer() -> int
   %{
@@ -38,4 +40,5 @@
   %}
 
   $endclass
+%}
 %}
