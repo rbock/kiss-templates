@@ -30,7 +30,7 @@
 %namespace test
 %{
   $class Sample
-  $member Helper helper
+  $member widgets::Helper helper
 
   %auto getName() -> std::string
   %{

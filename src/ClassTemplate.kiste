@@ -73,8 +73,15 @@
     %template<typename ClassData, typename Member>
     %void render_member(const size_t line_no, const ClassData& class_data, const Member& member)
     %{
-      %// The "using" is required for clang-3.1 and older g++ versions
-      %auto class_alias = member.class_name + "_t_alias";
+      %// The "using" is required for clang-3.1 and older g++ versions.
+      %// Replace any namespace qualification by underscores for use in the alias type name.
+      %auto unqualified_class_name = member.class_name;
+      %{
+        %size_t ns_pos;
+        %while ((ns_pos = unqualified_class_name.find("::")) != std::string::npos)
+          %unqualified_class_name.replace(ns_pos, 2, "_");
+      %}
+      %auto class_alias = unqualified_class_name + "_t_alias";
       $|using ${class_alias} = ${member.class_name}_t<${class_data._name}_t, _data_t, _serializer_t>;$|
       $|${class_alias} ${member.name} = ${class_alias}{*this, data, _serialize};
       $|$call{line_directive(line_no + 1)}
