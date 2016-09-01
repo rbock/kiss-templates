@@ -79,7 +79,10 @@
       %{
         %size_t ns_pos;
         %while ((ns_pos = unqualified_class_name.find("::")) != std::string::npos)
-          %unqualified_class_name.replace(ns_pos, 2, "_");
+          %if (ns_pos == 0)
+            %unqualified_class_name.replace(ns_pos, 2, "");
+          %else
+            %unqualified_class_name.replace(ns_pos, 2, "_");
       %}
       %auto class_alias = unqualified_class_name + "_t_alias";
       $|using ${class_alias} = ${member.class_name}_t<${class_data._name}_t, _data_t, _serializer_t>;$|
