@@ -56,13 +56,17 @@ struct HelloWorld_t
 #line 36
 };
 
-#line 36
-template<typename DATA_T, typename SERIALIZER_T>
-auto HelloWorld(const DATA_T& data, SERIALIZER_T& serialize)
-  -> HelloWorld_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
+struct HelloWorld_generator
 {
-  return {kiste::terminal, data, serialize};
-}
+  #line 36
+  template<typename DATA_T, typename SERIALIZER_T>
+  auto operator()(const DATA_T& data, SERIALIZER_T& serialize) const
+    -> HelloWorld_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
+  {
+    return {kiste::terminal, data, serialize};
+  }
+};
+constexpr auto HelloWorld = HelloWorld_generator{};
 
 #line 36
 }
