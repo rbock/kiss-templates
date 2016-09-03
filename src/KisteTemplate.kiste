@@ -36,6 +36,7 @@
       %{
         $|#include <exception>
       %}
+      $|#include <kiste/raw_type.h>
       $|#include <kiste/terminal.h>
 
       %if (data._line_directives)

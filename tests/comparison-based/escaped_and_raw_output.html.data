@@ -1,4 +1,9 @@
 struct
 {
   std::string myhref = "<test':_:'me\">";
+  std::vector<kiste::conditionally_raw_string> rows = {
+    "escaped > value",
+    kiste::rawval("<b>unescaped value</b>"),
+    kiste::conditionally_raw_string("<i>another unescaped value</i>", true),
+  };
 } data;

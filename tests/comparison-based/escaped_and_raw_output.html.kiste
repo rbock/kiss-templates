@@ -31,6 +31,15 @@
   %auto render() -> void
   %{
 <a href="${data.myhref}" $raw{"class=\"mycssclass\""}>Link</a>
+
+<table>
+%for (auto row : data.rows)
+%{
+<tr><td>${row}</td></tr>
+%}
+</table>
+
+${kiste::rawval("<p>raw paragraph</p>")}
   %}
 
   $endclass

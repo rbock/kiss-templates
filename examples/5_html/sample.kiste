@@ -25,8 +25,15 @@
 % */
 
 %#include <string>
+%#include <vector>
 %namespace test
 %{
+
+  %struct TableRow
+  %{
+    %kiste::conditionally_raw_string label, value;
+  %};
+
   $class Sample
 
   %auto linkTarget(const std::string& target) -> void
@@ -52,6 +59,13 @@
       %// <!-- ${} is escaped, but sometimes you don't want that -->
       Raw HTML: $raw{"<br/>"}
 
+      %auto myRows = std::vector<TableRow>{
+        %TableRow{kiste::rawval("<em>emphasized label</em>"), "this > gets > escaped"},
+        %TableRow{"second label", kiste::rawval("<i>unescaped</i>")},
+        %TableRow{"third label", kiste::rawval(std::string{"<i>also unescaped</i>"})},
+      %};
+      Conditionally raw values: $call{renderTable(myRows)}
+
       <FORM NAME="form" ACTION="${data.formUrl}" METHOD="POST" $call{linkTarget(data.formTarget)}>
         %for (auto param : data.params)
         %{
@@ -60,6 +74,17 @@
       </FORM>
       </BODY>
     </HTML>
+  %}
+
+  %// Example of conditionally_raw_t (here: the most common use case conditionally_raw_string)
+  %auto renderTable(const std::vector<TableRow> rows) -> void
+  %{
+    <table>
+      %for (const auto& row : rows)
+      %{
+        <tr><th>${row.label}</th><td>${row.value}</td></tr>
+      %}
+    </table>
   %}
 
   $endclass

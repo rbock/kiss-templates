@@ -28,6 +28,7 @@
  */
 
 #include <kiste/terminal.h>
+#include <kiste/raw_type.h>
 #include <kiste/raw.h>
 #include <kiste/html.h>
 
