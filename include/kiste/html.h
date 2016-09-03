@@ -100,7 +100,7 @@ namespace kiste
     template <typename T>
     auto escape(const conditionally_raw_t<T>& cr) -> void
     {
-      if (cr._isRaw)
+      if (cr._is_raw)
         _os << cr._t;
       else
         escape(cr._t);

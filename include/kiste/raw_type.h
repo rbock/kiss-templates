@@ -67,24 +67,24 @@ namespace kiste
     // Additionally allow implicit construction from `const char*` if T convertible to std::string
     conditionally_raw_t(
         typename std::enable_if<std::is_convertible<T, std::string>::value, const char*>::type s)
-        : _t(s), _isRaw(false)
+        : _t(s), _is_raw(false)
     {
     }
 
-    conditionally_raw_t(const T& t) : _t(t), _isRaw(false)
+    conditionally_raw_t(const T& t) : _t(t), _is_raw(false)
     {
     }
 
-    conditionally_raw_t(const T& t, bool isRaw) : _t(t), _isRaw(isRaw)
+    conditionally_raw_t(const T& t, bool is_raw) : _t(t), _is_raw(is_raw)
     {
     }
 
-    conditionally_raw_t(const raw_t<T>& r) : _t(r._t), _isRaw(true)
+    conditionally_raw_t(const raw_t<T>& r) : _t(r._t), _is_raw(true)
     {
     }
 
     T _t;
-    bool _isRaw;
+    bool _is_raw;
   };
 
   // Most common use cases
