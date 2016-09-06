@@ -1,19 +1,54 @@
+%/*
+% * Copyright (c) 2015-2015, Roland Bock
+% * All rights reserved.
+% *
+% * Redistribution and use in source and binary forms, with or without modification,
+% * are permitted provided that the following conditions are met:
+% *
+% *   Redistributions of source code must retain the above copyright notice, this
+% *   list of conditions and the following disclaimer.
+% *
+% *   Redistributions in binary form must reproduce the above copyright notice, this
+% *   list of conditions and the following disclaimer in the documentation and/or
+% *   other materials provided with the distribution.
+% *
+% * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+% * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+% * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+% * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+% * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+% * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+% * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+% * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+% * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+% * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+% */
+
 %namespace kiste
 %{
   $class ClassTemplate
 
-    %void render_header()
+    %void line_directive(const size_t line_no)
+    %{
+      %if (data._line_directives)
+      %{
+        $|#line ${line_no}$|
+      %}
+    %}
+
+    %template<typename ClassData>
+    %void render_header(const size_t line_no, const ClassData& class_data)
     %{
       $|template<typename DERIVED_T, typename DATA_T, typename SERIALIZER_T>
-      $|struct ${data.class_name}_t
-      %if (!data.parent_class_name.empty())
+      $|struct ${class_data._name}_t
+      %if (!class_data._parent_name.empty())
       %{
-      $|   : public ${data.parent_class_name}_t<${data.class_name}_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>
+      $|  : public ${class_data._parent_name}_t<${class_data._name}_t<DERIVED_T, DATA_T, SERIALIZER_T>, DATA_T, SERIALIZER_T>
       %}
       $|{
-      %if (!data.parent_class_name.empty())
+      %if (!class_data._parent_name.empty())
       %{
-      $|  using _parent_t = ${data.parent_class_name}_t<${data.class_name}_t, DATA_T, SERIALIZER_T>;
+      $|  using _parent_t = ${class_data._parent_name}_t<${class_data._name}_t, DATA_T, SERIALIZER_T>;
       $|  _parent_t& parent;
       %}
       $|  DERIVED_T& child;
@@ -22,8 +57,8 @@
       $|  using _serializer_t = SERIALIZER_T;
       $|  _serializer_t& _serialize;
 
-      $|  ${data.class_name}_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):
-      %if (!data.parent_class_name.empty())
+      $|  ${class_data._name}_t(DERIVED_T& derived, const DATA_T& data_, SERIALIZER_T& serialize):
+      %if (!class_data._parent_name.empty())
       %{
       $|    _parent_t{*this, data_, serialize},
       $|    parent(*this),
@@ -32,30 +67,48 @@
       $|    data(data_),
       $|    _serialize(serialize)
       $|  {}
-      $|  // ----------------------------------------------------------------------
-      $|#line ${data.line_no + 1}
+      $|$call{line_directive(line_no + 1)}
     %}
 
-    %void render_footer()
+    %template<typename ClassData, typename Member>
+    %void render_member(const size_t line_no, const ClassData& class_data, const Member& member)
     %{
-      $|  // ----------------------------------------------------------------------
-      $|#line ${data.line_no}
+      %// The "using" is required for clang-3.1 and older g++ versions.
+      %// Replace any namespace qualification by underscores for use in the alias type name.
+      %auto unqualified_class_name = member.class_name;
+      %{
+        %size_t ns_pos;
+        %while ((ns_pos = unqualified_class_name.find("::")) != std::string::npos)
+          %if (ns_pos == 0)
+            %unqualified_class_name.replace(ns_pos, 2, "");
+          %else
+            %unqualified_class_name.replace(ns_pos, 2, "_");
+      %}
+      %auto class_alias = unqualified_class_name + "_t_alias";
+      $|using ${class_alias} = ${member.class_name}_t<${class_data._name}_t, _data_t, _serializer_t>;$|
+      $|${class_alias} ${member.name} = ${class_alias}{*this, data, _serialize};
+      $|$call{line_directive(line_no + 1)}
+    %}
+
+    %template<typename ClassData>
+    %void render_footer(const size_t line_no, const ClassData& class_data)
+    %{
+      $|$call{line_directive(line_no)}
       $|};
 
-      $|#line ${data.line_no}
-      $|template<typename DATA_T, typename SERIALIZER_T>
-      $|auto ${data.class_name}(const DATA_T& data, SERIALIZER_T& serialize)
-      $|  -> ${data.class_name}_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
+      $|struct ${class_data._name}_generator
       $|{
-      $|  return {kiste::terminal, data, serialize};
-      $|}
+      $|  $call{line_directive(line_no)}
+      $|  template<typename DATA_T, typename SERIALIZER_T>
+      $|  auto operator()(const DATA_T& data, SERIALIZER_T& serialize) const
+      $|    -> ${class_data._name}_t<kiste::terminal_t, DATA_T, SERIALIZER_T>
+      $|  {
+      $|    return {kiste::terminal, data, serialize};
+      $|  }
+      $|};
+      $|constexpr auto ${class_data._name} = ${class_data._name}_generator{};
 
-      $|#line ${data.line_no + 1}
-    %}
-
-    %void render_cpp_line(const std::string& line)
-    %{
-      $|$raw{line}
+      $|$call{line_directive(line_no)}
     %}
 
   $endclass

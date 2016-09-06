@@ -64,8 +64,8 @@ else()
 endif ()
 
 function(add_kiss_templates KISTE_NAME)
-  set(options REPORT_EXCEPTIONS)
-  set(oneValueArgs "")
+  set(options REPORT_EXCEPTIONS NO_LINE_DIRECTIVES)
+  set(oneValueArgs GENERATOR TARGET_FOLDER)
   set(multiValueArgs "")
   cmake_parse_arguments(KISTE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -74,18 +74,34 @@ function(add_kiss_templates KISTE_NAME)
     set(report_transactions "--report-exceptions")
   endif()
 
+  set(no_line_directives "")
+  if (KISTE_NO_LINE_DIRECTIVES)
+    set(no_line_directives "--no-line-directives")
+  endif()
+
+  set(generator "kiste2cpp")
+  if (KISTE_GENERATOR)
+    set(generator ${KISTE_GENERATOR})
+  endif()
+
+  set(target_folder ${CMAKE_CURRENT_BINARY_DIR})
+  if (KISTE_TARGET_FOLDER)
+    set(target_folder ${CMAKE_CURRENT_BINARY_DIR}/${KISTE_TARGET_FOLDER})
+	  file(MAKE_DIRECTORY ${target_folder})
+  endif()
+
   set(templates "")
   foreach(kiste ${KISTE_UNPARSED_ARGUMENTS})
     get_filename_component(source ${kiste} ABSOLUTE)
     get_filename_component(basename ${kiste} NAME_WE)
 
-    set(dest ${CMAKE_CURRENT_BINARY_DIR}/${basename}.h)
+    set(dest ${target_folder}/${basename}.h)
 
     set(templates ${templates} ${dest})
     add_custom_command(
       OUTPUT ${dest}
-      COMMAND $<TARGET_FILE:kiste2cpp> ${report_transactions} ${source} > ${dest}
-      DEPENDS ${source} kiste2cpp
+      COMMAND $<TARGET_FILE:${generator}> ${report_transactions} ${no_line_directives} ${source} > ${dest}
+      DEPENDS ${source} ${generator}
       )
   endforeach()
 

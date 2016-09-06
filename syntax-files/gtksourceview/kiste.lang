@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+		 Copy to something like /usr/share/gtksourceview-3.0/language-specs/kiste.lang
+		 Depends a bit on your system setup
+	-->
+<language id="kiste" _name="kiss-templates" version="2.0" _section="Source">
+  <metadata>
+    <property name="mimetypes">text/x-kiste</property>
+    <property name="globs">*.kiste</property>
+  </metadata>
+  <styles>
+    <style id="cpp" _name="cpp" map-to="def:comment"/>
+    <style id="call" _name="Call" map-to="def:string"/>
+    <style id="keyword" _name="Keyword" map-to="def:keyword"/>
+  </styles>
+  <definitions>
+    <context id="kiste">
+      <include>
+
+        <context id="cpp" style-ref="cpp">
+					<match>^\s*%.*$</match>
+        </context>
+
+        <context id="call" style-ref="call">
+          <start>\$(|call|raw){</start>
+          <end>}</end>
+        </context>
+
+        <context id="keywords" style-ref="keyword">
+          <match>\$class|\$endclass|\$member|\$\$|\$\|</match>
+        </context>
+
+      </include>
+    </context>
+  </definitions>
+</language>
+

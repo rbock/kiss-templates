@@ -1,0 +1,154 @@
+%/*
+% * Copyright (c) 2015-2015, Roland Bock
+% * All rights reserved.
+% *
+% * Redistribution and use in source and binary forms, with or without modification,
+% * are permitted provided that the following conditions are met:
+% *
+% *   Redistributions of source code must retain the above copyright notice, this
+% *   list of conditions and the following disclaimer.
+% *
+% *   Redistributions in binary form must reproduce the above copyright notice, this
+% *   list of conditions and the following disclaimer in the documentation and/or
+% *   other materials provided with the distribution.
+% *
+% * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+% * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+% * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+% * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+% * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+% * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+% * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+% * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+% * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+% * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+% */
+
+%#include "segment_type.h"
+%#include "line_type.h"
+
+%namespace kiste
+%{
+  $class LineTemplate
+
+    %void open_exception_handling()
+    %{
+      %if (data._report_exceptions)
+      %{
+        $| try$|
+        $| { $|
+      %}
+    %}
+
+    %void close_exception_handling(const std::string& expression)
+    %{
+      %if (data._report_exceptions)
+      %{
+        $| }$|
+        $| catch(...)$|
+        $| {$|
+        $| _serialize.report_exception(__LINE__, "${expression}", std::current_exception());$|
+        $| } $|
+      %}
+    %}
+
+    %void escape(const std::string& expression)
+    %{
+      $|$call{open_exception_handling()}$|
+      $|_serialize.escape($raw{expression});$|
+      $|$call{close_exception_handling(expression)}$|
+    %}
+
+    %void raw(const std::string& expression)
+    %{
+      $|$call{open_exception_handling()}$|
+      $|_serialize.raw($raw{expression});$|
+      $|$call{close_exception_handling(expression)}$|
+    %}
+
+    %void call(const std::string& expression)
+    %{
+      $|$call{open_exception_handling()}$|
+      $|static_assert(std::is_same<decltype($raw{expression}), void>::value, "$$call{} requires void expression"); ($raw{expression});$|
+      $|$call{close_exception_handling(expression)}$|
+    %}
+
+    %void open_string(bool& string_opened)
+    %{
+      %if (not string_opened)
+      %{
+        $|_serialize.text($|
+      %}
+      %string_opened = true;
+    %}
+
+    %void close_string(bool& string_opened)
+    %{
+      %if (string_opened)
+      %{
+        $|);$|
+      %}
+      %string_opened = false;
+    %}
+
+    %void text_segment(const std::string& line)
+    %{
+      $|"${line}"$|
+    %}
+
+    %void render_none()
+    %{
+
+    %}
+
+    %template<typename Line>
+    %void render_text(const Line& line)
+    %{
+      %for (std::size_t i = 0; i < line._curly_level; ++i)
+      %{
+        $|  $|
+      %}
+      %auto string_opened = line.starts_with_text() && line._previous_line_ends_with_text;
+      %if (string_opened)
+      %{
+        $|                $|
+      %}
+      %for (const auto& segment : line._segments)
+      %{
+        %switch(segment._type)
+        %{
+        %case segment_type::text:
+          $|$call{open_string(string_opened)}$|
+          $|$call{text_segment(segment._text)}$|
+          %break;
+        %case segment_type::trim_trailing_return:
+          %break;
+        %case segment_type::escape:
+          $|$call{close_string(string_opened)}$|
+          $|$call{escape(segment._text)}$|
+          %break;
+        %case segment_type::call:
+          $|$call{close_string(string_opened)}$|
+          $|$call{call(segment._text)}$|
+          %break;
+        %case segment_type::raw:
+          $|$call{close_string(string_opened)}$|
+          $|$call{raw(segment._text)}$|
+          %break;
+        %}
+      %}
+      %if (not line._next_line_starts_with_text)
+      %{
+        $|$call{close_string(string_opened)}$|
+      %}
+
+    %}
+
+    %template<typename Line>
+    %void render_cpp(const Line& line)
+    %{
+      $|$raw{line._segments[0]._text}
+    %}
+
+  $endclass
+%}

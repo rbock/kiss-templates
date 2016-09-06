@@ -1,3 +1,4 @@
+#pragma once
 /*
  * Copyright (c) 2015-2015, Roland Bock
  * All rights reserved.
@@ -24,22 +25,45 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdexcept>
 #include <iostream>
-#include <sample.h>
-#include <vector>
-#include <kiste/raw.h>
+#include <string>
 
-struct Data
+namespace kiste
 {
-  std::vector<int> items = {1, 2, 3, 4, 5, 6};
-};
+  struct line_data_t;
 
-int main()
-{
-  const auto data = Data{};
-  auto& os = std::cout;
-  auto serializer = kiste::raw{os};
-  auto sample = test::Sample(data, serializer);
+  struct parse_context
+  {
+    std::istream& _is;
+    std::ostream& _os;
+    std::string _filename;
+    bool _report_exceptions = false;
+    bool _line_directives = true;
+    std::string _line;
+    std::size_t _line_no = 0;
+    std::size_t _curly_level = 0;
+    std::size_t _class_curly_level = 0;
+    bool _has_trailing_return = false;
 
-  sample.render();
+    parse_context(std::istream& is,
+                  std::ostream& os,
+                  const std::string& filename,
+                  bool report_exceptions,
+                  bool line_directives)
+        : _is(is),
+          _os(os),
+          _filename{filename},
+          _report_exceptions{report_exceptions},
+          _line_directives{line_directives}
+    {
+    }
+
+    auto update(const line_data_t& line) -> void;
+  };
+
+  struct parse_error : public std::runtime_error
+  {
+    using std::runtime_error::runtime_error;
+  };
 }

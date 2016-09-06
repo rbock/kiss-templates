@@ -1,6 +1,39 @@
+%/*
+% * Copyright (c) 2015-2015, Roland Bock
+% * All rights reserved.
+% *
+% * Redistribution and use in source and binary forms, with or without modification,
+% * are permitted provided that the following conditions are met:
+% *
+% *   Redistributions of source code must retain the above copyright notice, this
+% *   list of conditions and the following disclaimer.
+% *
+% *   Redistributions in binary form must reproduce the above copyright notice, this
+% *   list of conditions and the following disclaimer in the documentation and/or
+% *   other materials provided with the distribution.
+% *
+% * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+% * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+% * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+% * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+% * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+% * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+% * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+% * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+% * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+% * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+% */
+
 %#include <string>
+%#include <vector>
 %namespace test
 %{
+
+  %struct TableRow
+  %{
+    %kiste::conditionally_raw_string label, value;
+  %};
+
   $class Sample
 
   %auto linkTarget(const std::string& target) -> void
@@ -26,6 +59,13 @@
       %// <!-- ${} is escaped, but sometimes you don't want that -->
       Raw HTML: $raw{"<br/>"}
 
+      %auto myRows = std::vector<TableRow>{
+        %TableRow{kiste::rawval("<em>emphasized label</em>"), "this > gets > escaped"},
+        %TableRow{"second label", kiste::rawval("<i>unescaped</i>")},
+        %TableRow{"third label", kiste::rawval(std::string{"<i>also unescaped</i>"})},
+      %};
+      Conditionally raw values: $call{renderTable(myRows)}
+
       <FORM NAME="form" ACTION="${data.formUrl}" METHOD="POST" $call{linkTarget(data.formTarget)}>
         %for (auto param : data.params)
         %{
@@ -34,6 +74,17 @@
       </FORM>
       </BODY>
     </HTML>
+  %}
+
+  %// Example of conditionally_raw_t (here: the most common use case conditionally_raw_string)
+  %auto renderTable(const std::vector<TableRow> rows) -> void
+  %{
+    <table>
+      %for (const auto& row : rows)
+      %{
+        <tr><th>${row.label}</th><td>${row.value}</td></tr>
+      %}
+    </table>
   %}
 
   $endclass
