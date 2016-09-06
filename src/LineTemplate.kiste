@@ -117,6 +117,8 @@
       %{
         %switch(segment._type)
         %{
+        %case segment_type::cpp:
+          %break;
         %case segment_type::text:
           $|$call{open_string(string_opened)}$|
           $|$call{text_segment(segment._text)}$|
