@@ -64,6 +64,7 @@ namespace kiste
 
   struct parse_error : public std::runtime_error
   {
-    using std::runtime_error::runtime_error;
+		parse_error(const std::string& what_arg): std::runtime_error(what_arg){}
+		parse_error(const char* what_arg): std::runtime_error(what_arg){}
   };
 }
