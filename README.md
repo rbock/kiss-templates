@@ -6,10 +6,10 @@ Branch / Compiler | clang-3.4,  gcc-4.8   |  VS14 2015
 Master       | [![Build Status](https://travis-ci.org/rbock/kiss-templates.svg?branch=master)](https://travis-ci.org/rbock/kiss-templates) | [![Build status](https://ci.appveyor.com/api/projects/status/0vhmquucorgyx427/branch/master?svg=true)](https://ci.appveyor.com/project/rbock/kiss-templates/branch/master)
 Develop      | [![Build Status](https://travis-ci.org/rbock/kiss-templates.svg?branch=develop)](https://travis-ci.org/rbock/kiss-templates) | [![Build status](https://ci.appveyor.com/api/projects/status/0vhmquucorgyx427/branch/develop?svg=true)](https://ci.appveyor.com/project/rbock/kiss-templates/branch/develop)
 
-## How it works:
+## How it works
 Use kiste2cpp to turn text templates into type- and name-safe C++ code. Use this code to generate text from your data and the serializer of choice.
 
-### How templates look like:
+### What templates look like
 Template are a mix of
   - kiss template commands (there are VERY few)
   - C++
@@ -29,14 +29,14 @@ Template are a mix of
 %}
 ```
 
-### Generating C++ code:
+### Generating C++ code
 I bet you can guess what this all means (and it is documented below), so let's compile this into a C++ header file:
 
-```
+```sh
 kiste2cpp hello_world.kiste > hello_world.h
 ```
 
-### Using the generated code:
+### Using the generated code
 And now we use it in our C++ project like this
 
 ```C++
@@ -60,15 +60,15 @@ int main()
 }
 ```
 
-### Output:
+### Output
 Compile and run:
-```
+```sh
 $ ./examples/0_hello_world/hello_world
     Hello World!
 ```
 Yeah!
 
-## Short Reference:
+## Short Reference
   - `%<whatever>` C++ code
   - `$class <name>` starts a template class
   - `$class <name> : <base>` starts a template class, which inherits from a base class
@@ -99,7 +99,7 @@ For example
 There is really nothing to it, just a `%` at the beginning of the line
 
 ### Template classes
-All text of the template is located in functions of template classes. Template classes start with `$class <name> [: <base>` and end with `$endclass`.
+All text of the template is located in functions of template classes. Template classes start with `$class <name> [: <base>]` and end with `$endclass`.
 
 This is a stand-alone class:
 ```
@@ -161,10 +161,10 @@ The serializer takes care of the required escaping, quoting, encoding, etc.
 ### Raw data
 Sometimes you need to actually output some text as is. Then use `$raw{expression}`. It will just pipe whatever you give it to the `ostream` directly.
 
-### Calling functions:
+### Calling functions
 If you want to call a function without serializing the result (e.g. because the function returns `void`), you can enclose the call in `$call{}`.
 
-### Trimming:
+### Trimming
   - left-trim of a line: Zero or more spaces/tabs followed by `$|`
   - right-trim of a line (including the trailing return): `$|` at the end of the line
 
@@ -181,14 +181,14 @@ This will get rid of the leading spaces and the trailing return, yielding someth
  Hello Mr. Wolf!
 ```
 
-### Escape sequences:
+### Escape sequences
   - `$$` -> `$`
   - `$%` -> `%`
 
-### Text:
+### Text
 Text is everything else, as long as it is inside a function of a template class.
 
-## Serializer classes:
+## Serializer classes
 The interface of a serializer has to have
 
   - `auto text(const char*) -> void;` This function is called by the kiss templates to serialize their texts.
@@ -198,6 +198,62 @@ Optionally, the serializer might offer
 
   - `auto raw(...) -> void;` This function is called with expressions from `$raw{whatever}`. Make it accept whatever you need and like.
   - `auto report_exception(long lineNo, const std::string& expression, std::exception_ptr e);` This function gets called if kiste2cpp is called with --report-exceptions. Handle reported exceptions here in any way you seem fit.
+
+## Serializer policies
+At some point you will probably want to serialize your types.
+If extending of `kiste::html` for one or two types works,
+extending for more types is not flexible, especially if you want to customize your serializer.
+
+Then this is a moment when _serializer policies_ may help.
+It allows you to implement a serializer for your output format in one class and
+implement policies (how to serialize specific types) as separate classes.
+Policies should know nothing about serializers, only how to convert their types to string (or even other types).
+
+Have a look at example `ratio_policy` for our type `ratio`:
+```C++
+struct ratio
+{
+  int num;
+  int den;
+};
+
+struct ratio_policy
+{
+  template <typename SerializerT>
+  void escape(SerializerT& serializer, const ratio& value)
+  {
+    serializer.escape(value.num);
+    if (value.den != 1)
+    {
+      serializer.escape('/');
+      serializer.escape(value.den);
+    }
+  }
+};
+```
+
+Then we need to extend `kiste::html` (or your serializer) with one template method `escape(SerializerT&, const T& t)`:
+```C++
+struct html : kiste::html
+{
+  html(std::ostream& os) : kiste::html(os)
+  {
+  }
+
+  template <typename SerializerT, typename T>
+  void escape(SerializerT&, const T& t)
+  {
+    kiste::html::escape(t);
+  }
+};
+```
+
+Finally we can build a serializer as `kiste::build_serializer(kiste::html{os}, ratio_policy{})`.
+`kiste::build_serializer` accepts an arbitary number of policies and builds one serializer that uses them all.
+
+This approach allows to keep knowledge about types in policies,
+provide arguments to policies and even reuse them for different serializers.
+Check out examples for more complex usages.
 
 ## Further education
 This is pretty much it.

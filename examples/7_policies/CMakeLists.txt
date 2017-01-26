@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2017, Roland Bock
+# Copyright (c) 2017-2017, Andrei Ivanitckii
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,
@@ -22,12 +22,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-add_subdirectory(0_hello_world)
-add_subdirectory(1_functions)
-add_subdirectory(2_cpp)
-add_subdirectory(3_inheritance)
-add_subdirectory(4_composition)
-add_subdirectory(5_html)
-add_subdirectory(6_exceptions)
-add_subdirectory(7_policies)
+add_kiss_templates(policies_templates sample.kiste)
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR}/../../include)
+add_executable(policies test.cpp)
+add_dependencies(policies policies_templates kiste)
+target_link_libraries(policies PRIVATE kiste)
