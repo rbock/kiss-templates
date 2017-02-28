@@ -52,7 +52,7 @@ foreach(TemplateOutputTestInput ${TemplateOutputTestInputs})
   add_test(
     NAME "TemplateOutputTest_${filename_we}"
     COMMAND
-      python -B
+      ${PYTHON_EXECUTABLE} -B
       "${CMAKE_CURRENT_SOURCE_DIR}/../differ.py"
       "${TemplateOutputTestInput}"
       "${output}"
