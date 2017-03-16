@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2015, Roland Bock
+# Copyright (c) 2015-2017, Roland Bock
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,
@@ -22,4 +22,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-install(FILES kiste/kiste.h kiste/raw.h kiste/html.h kiste/terminal.h DESTINATION include/kiste)
+install(FILES
+	kiste/cpp.h
+	kiste/html.h
+  kiste/kiste.h
+	kiste/raw_type.h
+	kiste/raw.h
+	kiste/serializer_builder.h
+	kiste/terminal.h
+	DESTINATION include/kiste)
